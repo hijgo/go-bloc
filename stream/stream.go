@@ -25,12 +25,19 @@ func CreateStream[T any](MaxQueueSize int, OnNewItem func(NewItem T)) Stream[T] 
 	}
 }
 
+func (s *Stream[_]) GetListenStatus() bool {
+	return s.isListenedTo
+}
+
 func (s *Stream[_]) StopListen() {
+	if !s.isListenedTo {
+		return
+	}
 	s.isListenedTo = false
 	s.stopListen <- struct{}{}
 }
 
-func (s *Stream[_]) Listen() {
+func (s *Stream[T]) Listen() {
 	s.isListenedTo = true
 	go func() {
 		for {

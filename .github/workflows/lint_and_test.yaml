@@ -1,0 +1,30 @@
+name: build lint and test
+
+on: push
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: setup go
+        uses: actions/setup-go@v2
+      - name: configure private github access
+        run: |
+          git config --global url."https://${{ secrets.ACTIONS_SECRET }}:x-oauth-basic@github.com/hijgo/go-bloc".insteadOf "https://github.com/hijgo/go-bloc"
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: setup go
+        uses: actions/setup-go@v2
+      - name: configure private github access
+        run: |
+          git config --global url."https://${{ secrets.ACTIONS_SECRET }}:x-oauth-basic@github.com/hijgo/go-bloc".insteadOf "https://github.com/hijgo/go-bloc"
+      - name: test
+        run: |
+          go test -v -cover ./...
