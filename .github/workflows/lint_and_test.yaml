@@ -10,6 +10,8 @@ jobs:
         uses: actions/checkout@v2
       - name: setup go
         uses: actions/setup-go@v2
+        with:
+          go-version: 1.18.1
       - name: configure private github access
         run: |
           git config --global url."https://${{ secrets.ACTIONS_SECRET }}:x-oauth-basic@github.com/hijgo/go-bloc".insteadOf "https://github.com/hijgo/go-bloc"
@@ -22,6 +24,8 @@ jobs:
         uses: actions/checkout@v2
       - name: setup go
         uses: actions/setup-go@v2
+        with:
+          go-version: 1.18.1
       - name: configure private github access
         run: |
           git config --global url."https://${{ secrets.ACTIONS_SECRET }}:x-oauth-basic@github.com/hijgo/go-bloc".insteadOf "https://github.com/hijgo/go-bloc"
