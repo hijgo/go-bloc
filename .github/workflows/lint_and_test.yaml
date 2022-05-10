@@ -31,4 +31,4 @@ jobs:
           git config --global url."https://${{ secrets.ACTIONS_SECRET }}:x-oauth-basic@github.com/hijgo/go-bloc".insteadOf "https://github.com/hijgo/go-bloc"
       - name: test
         run: |
-          go test -v -cover ./...
+          go test -cover  $(go list ./... | grep -v ./Example/...)

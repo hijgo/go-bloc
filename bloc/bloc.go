@@ -28,22 +28,26 @@ func CreateBloC[E any, S any, AD any](InitAdditionalData AD, mapEventToState fun
 	return newBloC
 }
 
-func (b *BloC[E, S, D]) ListenOnNewState(OnNewState func(S, D)) bool {
+func (b *BloC[E, S, AD]) AddEvent(NewEvent E) {
+	b.eventStream.Add(event.CreateEvent[E](NewEvent))
+}
+
+func (b *BloC[E, S, AD]) ListenOnNewState(OnNewState func(S)) bool {
 	if b.stateStream.GetListenStatus() {
 		return false
 	}
 	b.stateStream.OnNewItem = func(NewState S) {
-		OnNewState(NewState, b.AdditionalData)
+		OnNewState(NewState)
 	}
 	b.stateStream.Listen()
 	return true
 }
 
-func (b *BloC[E, S, D]) StopListenToStateStream() {
+func (b *BloC[E, S, AD]) StopListenToStateStream() {
 	b.stateStream.StopListen()
 }
 
-func (b *BloC[E, S, D]) StartListenToEventStream() bool {
+func (b *BloC[E, S, AD]) StartListenToEventStream() bool {
 	if b.eventStream.GetListenStatus() {
 		return false
 	}
@@ -51,6 +55,6 @@ func (b *BloC[E, S, D]) StartListenToEventStream() bool {
 	return true
 }
 
-func (b *BloC[E, S, D]) StopListenToEventStream() {
+func (b *BloC[E, S, AD]) StopListenToEventStream() {
 	b.eventStream.StopListen()
 }

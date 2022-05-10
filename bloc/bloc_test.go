@@ -106,11 +106,11 @@ func TestBloC_ListenOnNewState(t *testing.T) {
 	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
 	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
 
-	b.ListenOnNewState(func(S State, AD AD) {
+	b.ListenOnNewState(func(S State) {
 		check = S.State
 	})
 
-	if returnValue := b.ListenOnNewState(func(S State, AD AD) { check = S.State }); returnValue {
+	if returnValue := b.ListenOnNewState(func(S State) { check = S.State }); returnValue {
 		t.Errorf("Expected value To Be Of Value '%t' Actual '%t'", false, returnValue)
 	}
 
@@ -134,11 +134,11 @@ func TestBloC_StopListenToStateStream(t *testing.T) {
 	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
 	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
 
-	b.ListenOnNewState(func(S State, AD AD) {
+	b.ListenOnNewState(func(S State) {
 		check = S.State
 	})
 
-	if returnValue := b.ListenOnNewState(func(S State, AD AD) { check = S.State }); returnValue {
+	if returnValue := b.ListenOnNewState(func(S State) { check = S.State }); returnValue {
 		t.Errorf("Expected value To Be Of Value '%t' Actual '%t'", false, returnValue)
 	}
 
@@ -156,5 +156,16 @@ func TestBloC_StopListenToStateStream(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 	if check != 2 {
 		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 2, check)
+	}
+}
+
+func TestBloC_AddEvent(t *testing.T) {
+	ad := AD{}
+	check := 0
+	b := CreateBloC[Event, State, AD](ad, func(E event.Event[Event], AD AD) State { check += E.Data.Data; return State{} })
+	b.StartListenToEventStream()
+	b.AddEvent(Event{Data: 1})
+	if check != 1 {
+		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, check)
 	}
 }
