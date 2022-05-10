@@ -49,12 +49,10 @@ func (s *Stream[T]) Listen() {
 					var wg sync.WaitGroup
 					wg.Add(1)
 					go func() {
-						select {
-						case isPaused := <-s.pauseListen:
-							if !isPaused {
-								wg.Done()
-								return
-							}
+						isPaused := <-s.pauseListen
+						if !isPaused {
+							wg.Done()
+							return
 						}
 					}()
 					wg.Wait()
