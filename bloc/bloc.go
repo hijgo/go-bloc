@@ -7,21 +7,21 @@ import (
 
 var DefaultMaxQueueSize = 100
 
-type BloC[E any, S any, AD any] struct {
+type BloC[E any, S any, BD any] struct {
 	eventStream     *stream.Stream[event.Event[E]]
 	stateStream     *stream.Stream[S]
-	AdditionalData  AD
-	mapEventToState func(NewEvent event.Event[E], AdditionalData AD) S
+	BloCData        BD
+	mapEventToState func(NewEvent event.Event[E], AdditionalData *BD) S
 }
 
-func CreateBloC[E any, S any, AD any](InitAdditionalData AD, mapEventToState func(NewEvent event.Event[E], AdditionalData AD) S) BloC[E, S, AD] {
-	newBloC := BloC[E, S, AD]{
-		AdditionalData:  InitAdditionalData,
+func CreateBloC[E any, S any, BD any](InitialBloCData BD, mapEventToState func(NewEvent event.Event[E], BloCData *BD) S) BloC[E, S, BD] {
+	newBloC := BloC[E, S, BD]{
+		BloCData:        InitialBloCData,
 		mapEventToState: mapEventToState,
 	}
 	stateStream := stream.CreateStream[S](DefaultMaxQueueSize, func(NewItem S) {})
 	eventStream := stream.CreateStream[event.Event[E]](DefaultMaxQueueSize, func(NewEvent event.Event[E]) {
-		stateStream.Add(mapEventToState(NewEvent, newBloC.AdditionalData))
+		stateStream.Add(mapEventToState(NewEvent, &newBloC.BloCData))
 	})
 	newBloC.stateStream = &stateStream
 	newBloC.eventStream = &eventStream

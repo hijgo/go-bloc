@@ -7,10 +7,10 @@ Generally speaking, BLoC (Business Logic Component) is a design pattern enabling
  -- <cite>[flutterclutter.dev](https://www.flutterclutter.dev/flutter/basics/what-is-the-bloc-pattern/2021/2084/)</cite>
  <br/>
  <br/>
- For further information about the BloC-Design-Pattern refer to [bloclibrary.dev/](https://bloclibrary.dev/#/)
+ For further information about the BloC Design Pattern I recommend [mitrais.com](https://www.mitrais.com/news-updates/getting-started-with-flutter-bloc-pattern/)
  
  ## How can it be useful in go? 
-Although the BloC Design Pattern was introduced for the development of mobile apps using Flutter, it can be beneficial outside of its origin.
+Although the BloC Design Pattern was introduced for the development of mobile apps using Flutter, it can be beneficial outside its origins.
 <br/><br/>
-BloC can be useful in go the same way as it can be inside Flutter. Whenever your project is presenting something, in some way or another, you should think about using the BloC-Design-Pattern. Because without a clear and easy to understand design-pattern, like BloC, it can be hard to understand and keep track of the strings connecting your presenting layer and data layer.<br/><br/>
-When the presenting layer and the data layer are separated, with a BloC as a middleman, your project structure will become much clearer. Therefore your code will become more readable and easier to understand too. As extra plus point testing will also become much easier, as you can produce any state through feeding events to the BloC.
+BloC can be useful in go the same way as it can be inside Flutter. Whenever your project is presenting something, in some way or another, you should think about using the BloC Design Pattern. Because without a clear and easy to understand design-pattern, like BloC, it can be hard to understand and keep track of the strings connecting your presenting layer and data layer.<br/><br/>
+When the presenting layer and the data layer are separated, with a BloC as a middleman, your project structure will become much clearer. Therefore, your code will become more readable and easier to understand too. As extra plus point testing will also become much easier, as you can produce any state through feeding events to the BloC.

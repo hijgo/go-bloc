@@ -12,8 +12,8 @@ type Event struct {
 	Data int
 }
 
-type AD struct {
-	AD string
+type BD struct {
+	BD string
 }
 
 type State struct {
@@ -21,8 +21,8 @@ type State struct {
 }
 
 func TestCreateBloC(t *testing.T) {
-	ad := AD{}
-	b := CreateBloC[Event, State, AD](ad, func(E event.Event[Event], AD AD) State { return State{} })
+	bd := BD{}
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	if value := reflect.TypeOf(b.eventStream); value != reflect.TypeOf(&stream.Stream[event.Event[Event]]{}) {
 		t.Errorf("Expected eventStream Of Type '%s' Actual '%s'", reflect.TypeOf(&stream.Stream[event.Event[Event]]{}), value)
@@ -32,23 +32,23 @@ func TestCreateBloC(t *testing.T) {
 		t.Errorf("Expected stateStream Of Type '%s' Actual '%s'", reflect.TypeOf(&stream.Stream[State]{}), value)
 	}
 
-	if value := reflect.TypeOf(b.mapEventToState); value != reflect.TypeOf(func(event.Event[Event], AD) State { return State{} }) {
-		t.Errorf("Expected mapEventToState Of Type '%s' Actual '%s'", reflect.TypeOf(func(event.Event[Event], AD) {}), value)
+	if value := reflect.TypeOf(b.mapEventToState); value != reflect.TypeOf(func(event.Event[Event], *BD) State { return State{} }) {
+		t.Errorf("Expected mapEventToState Of Type '%s' Actual '%s'", reflect.TypeOf(func(event.Event[Event], BD) {}), value)
 	}
 
-	if value := reflect.TypeOf(b.AdditionalData); value != reflect.TypeOf(AD{}) {
-		t.Errorf("Expected AdditionalData Of Type '%s' Actual '%s'", reflect.TypeOf(AD{}), value)
+	if value := reflect.TypeOf(b.BloCData); value != reflect.TypeOf(BD{}) {
+		t.Errorf("Expected AdditionalData Of Type '%s' Actual '%s'", reflect.TypeOf(BD{}), value)
 	}
 
-	if value := b.AdditionalData; value != ad {
-		t.Errorf("Expected AdditionalData Of Value '%s' Actual '%s'", ad, value)
+	if value := b.BloCData; value != bd {
+		t.Errorf("Expected AdditionalData Of Value '%s' Actual '%s'", bd, value)
 	}
 }
 
 func TestBloC_StartListenToEventStream(t *testing.T) {
-	ad := AD{}
+	bd := BD{}
 	value := 0
-	b := CreateBloC[Event, State, AD](ad, func(E event.Event[Event], AD AD) State { return State{} })
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	b.eventStream.OnNewItem = func(NewItem event.Event[Event]) {
 		value += NewItem.Data.Data
@@ -74,9 +74,9 @@ func TestBloC_StartListenToEventStream(t *testing.T) {
 }
 
 func TestBloC_StopListenToEventStream(t *testing.T) {
-	ad := AD{}
+	bd := BD{}
 	check := 0
-	b := CreateBloC[Event, State, AD](ad, func(E event.Event[Event], AD AD) State { return State{} })
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	b.eventStream.OnNewItem = func(NewItem event.Event[Event]) {
 		check += NewItem.Data.Data
@@ -98,8 +98,8 @@ func TestBloC_StopListenToEventStream(t *testing.T) {
 }
 
 func TestBloC_ListenOnNewState(t *testing.T) {
-	ad := AD{}
-	b := CreateBloC[Event, State, AD](ad, func(E event.Event[Event], AD AD) State { return State{State: 2 * E.Data.Data} })
+	bd := BD{}
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: 2 * E.Data.Data} })
 	check := 0
 
 	b.StartListenToEventStream()
@@ -126,8 +126,8 @@ func TestBloC_ListenOnNewState(t *testing.T) {
 }
 
 func TestBloC_StopListenToStateStream(t *testing.T) {
-	ad := AD{}
-	b := CreateBloC[Event, State, AD](ad, func(E event.Event[Event], AD AD) State { return State{State: 2 * E.Data.Data} })
+	bd := BD{}
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: 2 * E.Data.Data} })
 	check := 0
 
 	b.StartListenToEventStream()
@@ -160,9 +160,9 @@ func TestBloC_StopListenToStateStream(t *testing.T) {
 }
 
 func TestBloC_AddEvent(t *testing.T) {
-	ad := AD{}
+	bd := BD{}
 	check := 0
-	b := CreateBloC[Event, State, AD](ad, func(E event.Event[Event], AD AD) State { check += E.Data.Data; return State{} })
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { check += E.Data.Data; return State{} })
 	b.StartListenToEventStream()
 	b.AddEvent(Event{Data: 1})
 	if check != 1 {
