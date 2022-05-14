@@ -48,14 +48,14 @@ func TestInitStreamBuilder(t *testing.T) {
 		t.Errorf("Expected initialEvent Of Value '%s' Actual '%s'", fmt.Sprint(initialEvent), fmt.Sprint(value))
 
 	}
-	time.Sleep(5 * time.Microsecond)
+	time.Sleep(10 * time.Microsecond)
 	if check != 1 {
 		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, check)
 	}
 	streamBuilder.BloC.AddEvent(Event{
 		Data: 2,
 	})
-	time.Sleep(5 * time.Microsecond)
+	time.Sleep(10 * time.Microsecond)
 	if check != 2 {
 		t.Errorf("Expected check Of Value '%d' Actual '%d'", 2, check)
 	}
@@ -71,13 +71,13 @@ func TestStreamBuilder_Dispose(t *testing.T) {
 	streamBuilder := InitStreamBuilder[Event, State, BD](b, &initialEvent, func(NewState State) {
 		check = NewState.State
 	})
-	time.Sleep(5 * time.Microsecond)
+	time.Sleep(10 * time.Microsecond)
 	if check != 1 {
 		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, check)
 	}
 	streamBuilder.Dispose()
 	streamBuilder.BloC.AddEvent(Event{Data: 2})
-	time.Sleep(5 * time.Microsecond)
+	time.Sleep(10 * time.Microsecond)
 	if check != 1 {
 		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, check)
 	}
