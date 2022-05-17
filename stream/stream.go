@@ -70,6 +70,11 @@ func (s Stream[_]) GetQueueSize() int {
 
 func (s Stream[T]) ResumeAtQueuePosition(Position int) {
 	s.pauseListen <- true
+
+	if Position < 0 || Position > s.MaxQueueSize-1 {
+		defer func() {}()
+		return
+	}
 	s.OnNewItem(*s.queue[Position])
 
 	defer func() {
@@ -79,13 +84,14 @@ func (s Stream[T]) ResumeAtQueuePosition(Position int) {
 }
 
 func (s *Stream[T]) Add(NewItem T) {
+	if s.isListenedTo {
+		s.sink <- NewItem
+	}
 	if len(s.queue) >= s.MaxQueueSize {
 		s.queue = s.queue[1:s.MaxQueueSize]
 		s.queue = append(s.queue, &NewItem)
 	} else {
 		s.queue = append(s.queue, &NewItem)
 	}
-	if s.isListenedTo {
-		s.sink <- NewItem
-	}
+
 }

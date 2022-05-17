@@ -5,6 +5,7 @@ import (
 	"dev.hijgo.go-bloc/event"
 	"fmt"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 )
@@ -22,16 +23,20 @@ type State struct {
 }
 
 func TestInitStreamBuilder(t *testing.T) {
+	var wg sync.WaitGroup
 	bd := BD{}
-	check := 0
+	value := 0
 	initialEvent := Event{
 		Data: 1,
 	}
+
+	wg.Add(1)
+
 	b := bloc.CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: E.Data.Data} })
 	streamBuilder := InitStreamBuilder[Event, State, BD](b, &initialEvent, func(NewState State) {
-		check = NewState.State
+		value = NewState.State
+		wg.Done()
 	})
-
 	if value := reflect.TypeOf(streamBuilder.BloC); value != reflect.TypeOf(b) {
 		t.Errorf("Expected BloC Of Type '%s' Actual '%s'", reflect.TypeOf(b), value)
 	}
@@ -48,37 +53,46 @@ func TestInitStreamBuilder(t *testing.T) {
 		t.Errorf("Expected initialEvent Of Value '%s' Actual '%s'", fmt.Sprint(initialEvent), fmt.Sprint(value))
 
 	}
-	time.Sleep(10 * time.Microsecond)
-	if check != 1 {
-		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, check)
+	wg.Wait()
+	if value != 1 {
+		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, value)
 	}
+
+	wg.Add(1)
 	streamBuilder.BloC.AddEvent(Event{
 		Data: 2,
 	})
-	time.Sleep(10 * time.Microsecond)
-	if check != 2 {
-		t.Errorf("Expected check Of Value '%d' Actual '%d'", 2, check)
+	wg.Wait()
+	if value != 2 {
+		t.Errorf("Expected check Of Value '%d' Actual '%d'", 2, value)
 	}
 }
 
 func TestStreamBuilder_Dispose(t *testing.T) {
+	var wgBuild sync.WaitGroup
 	bd := BD{}
-	check := 0
+	value := 0
 	initialEvent := Event{
 		Data: 1,
 	}
+
+	wgBuild.Add(1)
+
 	b := bloc.CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: E.Data.Data} })
 	streamBuilder := InitStreamBuilder[Event, State, BD](b, &initialEvent, func(NewState State) {
-		check = NewState.State
+		value = NewState.State
+		wgBuild.Done()
 	})
-	time.Sleep(10 * time.Microsecond)
-	if check != 1 {
-		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, check)
+
+	wgBuild.Wait()
+	if value != 1 {
+		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, value)
 	}
+
 	streamBuilder.Dispose()
 	streamBuilder.BloC.AddEvent(Event{Data: 2})
-	time.Sleep(10 * time.Microsecond)
-	if check != 1 {
-		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, check)
+	time.Sleep(1 * time.Second)
+	if value != 1 {
+		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, value)
 	}
 }

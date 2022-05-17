@@ -92,13 +92,17 @@ func main() {
 
 	/** Initialize the StreamBuilder. We are passing the BloC, an initial event to get things started and the
 	buildFromState function.*/
+
+	go func() {
+		err := http.ListenAndServe("localhost:8080", nil)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	stream_builder.InitStreamBuilder[CounterEvent, CounterState, CounterBloCData](counterBloc, &CounterEvent{
 		EventType: resetEvent,
 		Input:     0,
 	}, buildFromState)
 
-	err := http.ListenAndServe("localhost:8080", nil)
-	if err != nil {
-		return
-	}
 }

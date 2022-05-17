@@ -2,8 +2,8 @@ package stream
 
 import (
 	"reflect"
+	"sync"
 	"testing"
-	"time"
 )
 
 func TestCreateStream(t *testing.T) {
@@ -70,27 +70,37 @@ func TestStream_GetQueueSize(t *testing.T) {
 }
 
 func TestStream_Listen(t *testing.T) {
-	check := 0
-	s := CreateStream[int](1, func(NewItem int) { check += NewItem })
+	var wg sync.WaitGroup
+	value := 0
+	s := CreateStream[int](1, func(NewItem int) { value += NewItem; wg.Done() })
+
 	s.Add(1)
-	if check != 0 {
-		t.Errorf("Expected check To Equal '%d' Actual '%d'", 0, check)
+	if value != 0 {
+		t.Errorf("Expected check To Equal '%d' Actual '%d'", 0, value)
 	}
+
+	wg.Add(1)
 	s.Listen()
 	s.Add(1)
+	wg.Wait()
 
-	if check != 1 {
-		t.Errorf("Expected check To Equal '%d' Actual '%d'", 1, check)
+	if value != 1 {
+		t.Errorf("Expected check To Equal '%d' Actual '%d'", 1, value)
 	}
 }
 
 func TestStream_StopListen(t *testing.T) {
-	check := 0
-	s := CreateStream[int](2, func(NewItem int) { check += NewItem })
+	var wg sync.WaitGroup
+	value := 0
+	s := CreateStream[int](2, func(NewItem int) { value += NewItem; wg.Done() })
+
 	s.Listen()
+	wg.Add(1)
 	s.Add(1)
-	if check != 1 {
-		t.Errorf("Expected check To Equal '%d' Actual '%d'", 1, check)
+	wg.Wait()
+
+	if value != 1 {
+		t.Errorf("Expected check To Equal '%d' Actual '%d'", 1, value)
 	}
 	if value := s.GetQueueSize(); value != 1 {
 		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 1, value)
@@ -100,32 +110,41 @@ func TestStream_StopListen(t *testing.T) {
 	if value := s.GetQueueSize(); value != 2 {
 		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 2, value)
 	}
-	if check != 1 {
-		t.Errorf("Expected check To Equal '%d' Actual '%d'", 1, check)
+	if value != 1 {
+		t.Errorf("Expected check To Equal '%d' Actual '%d'", 1, value)
 	}
 
 }
 
 func TestStream_ResumeAtQueuePosition(t *testing.T) {
-	check := 0
-	s := CreateStream[int](2, func(NewItem int) { check += NewItem })
+	var wg sync.WaitGroup
+	value := 0
+	s := CreateStream[int](2, func(NewItem int) { value += NewItem; wg.Done() })
+
 	s.Listen()
+	wg.Add(1)
 	s.Add(1)
-	if check != 1 {
-		t.Errorf("Expected check To Equal '%d' Actual '%d'", 1, check)
+	wg.Wait()
+	if value != 1 {
+		t.Errorf("Expected check To Equal '%d' Actual '%d'", 1, value)
 	}
 	if value := s.GetQueueSize(); value != 1 {
 		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 1, value)
 	}
+
+	wg.Add(2)
 	s.Add(2)
 	s.ResumeAtQueuePosition(1)
-	if check != 5 {
-		t.Errorf("Expected check To Equal '%d' Actual '%d'", 5, check)
+	wg.Wait()
+	if value != 5 {
+		t.Errorf("Expected check To Equal '%d' Actual '%d'", 5, value)
 	}
+
+	wg.Add(1)
 	s.Add(2)
-	time.Sleep(1 * time.Second)
-	if check != 7 {
-		t.Errorf("Expected check To Equal '%d' Actual '%d'", 7, check)
+	wg.Wait()
+	if value != 7 {
+		t.Errorf("Expected check To Equal '%d' Actual '%d'", 7, value)
 	}
 }
 

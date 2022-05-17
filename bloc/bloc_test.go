@@ -4,8 +4,8 @@ import (
 	"dev.hijgo.go-bloc/event"
 	"dev.hijgo.go-bloc/stream"
 	"reflect"
+	"sync"
 	"testing"
-	"time"
 )
 
 type Event struct {
@@ -46,15 +46,17 @@ func TestCreateBloC(t *testing.T) {
 }
 
 func TestBloC_StartListenToEventStream(t *testing.T) {
+	var wg sync.WaitGroup
 	bd := BD{}
 	value := 0
 	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	b.eventStream.OnNewItem = func(NewItem event.Event[Event]) {
 		value += NewItem.Data.Data
+		wg.Done()
 	}
 
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
+	b.AddEvent(Event{Data: 1})
 
 	if value != 0 {
 		t.Errorf("Expected value To Be Of Value '%d' Actual '%d'", 0, value)
@@ -66,106 +68,126 @@ func TestBloC_StartListenToEventStream(t *testing.T) {
 		t.Errorf("Expected value To Be Of Value '%t' Actual '%t'", false, returnValue)
 	}
 
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 2}))
-
+	wg.Add(1)
+	b.AddEvent(Event{Data: 2})
+	wg.Wait()
 	if value != 2 {
 		t.Errorf("Expected value To Be Of Value '%d' Actual '%d'", 2, value)
 	}
 }
 
 func TestBloC_StopListenToEventStream(t *testing.T) {
+	var wg sync.WaitGroup
 	bd := BD{}
-	check := 0
+	value := 0
 	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	b.eventStream.OnNewItem = func(NewItem event.Event[Event]) {
-		check += NewItem.Data.Data
+		value += NewItem.Data.Data
+		wg.Done()
 	}
 
 	b.StartListenToEventStream()
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
-
-	if check != 1 {
-		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, check)
+	wg.Add(1)
+	b.AddEvent(Event{Data: 1})
+	wg.Wait()
+	if value != 1 {
+		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, value)
 	}
 
 	b.StopListenToEventStream()
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 2}))
+	b.AddEvent(Event{Data: 2})
 
-	if check != 1 {
-		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, check)
+	if value != 1 {
+		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, value)
 	}
 }
 
 func TestBloC_ListenOnNewState(t *testing.T) {
+	var wg sync.WaitGroup
 	bd := BD{}
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: 2 * E.Data.Data} })
-	check := 0
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State {
+		return State{State: 2 * E.Data.Data}
+	})
+	value := 0
 
 	b.StartListenToEventStream()
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
+	b.AddEvent(Event{Data: 1})
 
 	b.ListenOnNewState(func(S State) {
-		check = S.State
+		value = S.State
+		wg.Done()
 	})
 
-	if returnValue := b.ListenOnNewState(func(S State) { check = S.State }); returnValue {
+	if returnValue := b.ListenOnNewState(func(S State) { value = S.State }); returnValue {
 		t.Errorf("Expected value To Be Of Value '%t' Actual '%t'", false, returnValue)
 	}
 
-	if check != 0 {
-		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 0, check)
+	if value != 0 {
+		t.Errorf("Expected value To Be Of Value '%d' Actual '%d'", 0, value)
 	}
 
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
-	time.Sleep(1 * time.Millisecond)
-	if check != 2 {
-		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 2, check)
+	wg.Add(1)
+	b.AddEvent(Event{Data: 1})
+	wg.Wait()
+	if value != 2 {
+		t.Errorf("Expected value To Be Of Value '%d' Actual '%d'", 2, value)
 	}
 }
 
 func TestBloC_StopListenToStateStream(t *testing.T) {
+	var wgState sync.WaitGroup
+	var wgEvent sync.WaitGroup
 	bd := BD{}
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: 2 * E.Data.Data} })
-	check := 0
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { defer wgEvent.Done(); return State{State: 2 * E.Data.Data} })
+	value := 0
 
 	b.StartListenToEventStream()
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
+	wgEvent.Add(1)
+	b.AddEvent(Event{Data: 1})
+	wgEvent.Wait()
 
 	b.ListenOnNewState(func(S State) {
-		check = S.State
+		value = S.State
+		wgState.Done()
 	})
 
-	if returnValue := b.ListenOnNewState(func(S State) { check = S.State }); returnValue {
+	if returnValue := b.ListenOnNewState(func(S State) { value = S.State }); returnValue {
 		t.Errorf("Expected value To Be Of Value '%t' Actual '%t'", false, returnValue)
 	}
 
-	if check != 0 {
-		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 0, check)
+	if value != 0 {
+		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 0, value)
 	}
 
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 1}))
-	time.Sleep(1 * time.Millisecond)
-	if check != 2 {
-		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 2, check)
+	wgState.Add(1)
+	wgEvent.Add(1)
+	b.AddEvent(Event{Data: 1})
+	wgEvent.Wait()
+	wgState.Wait()
+	if value != 2 {
+		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 2, value)
 	}
+
 	b.StopListenToStateStream()
-	b.eventStream.Add(event.CreateEvent[Event](Event{Data: 2}))
-	time.Sleep(1 * time.Millisecond)
-	if check != 2 {
-		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 2, check)
+	wgEvent.Add(1)
+	b.AddEvent(Event{Data: 2})
+	wgEvent.Wait()
+	if value != 2 {
+		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 2, value)
 	}
 }
 
 func TestBloC_AddEvent(t *testing.T) {
+	var wg sync.WaitGroup
 	bd := BD{}
-	check := 0
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { check += E.Data.Data; return State{} })
+	value := 0
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { defer wg.Done(); value += E.Data.Data; return State{} })
 	b.StartListenToEventStream()
+	wg.Add(1)
 	b.AddEvent(Event{Data: 1})
-	if check != 1 {
-		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, check)
+	wg.Wait()
+	if value != 1 {
+		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, value)
 	}
 }
