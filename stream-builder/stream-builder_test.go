@@ -1,9 +1,9 @@
 package stream_builder
 
 import (
-	"dev.hijgo.go-bloc/bloc"
-	"dev.hijgo.go-bloc/event"
 	"fmt"
+	"github.com/hijgo/go-bloc/bloc"
+	"github.com/hijgo/go-bloc/event"
 	"reflect"
 	"sync"
 	"testing"

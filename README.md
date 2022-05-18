@@ -1,6 +1,6 @@
 # 💥 go-bloc
 ![lint_and_test_workflow](https://github.com/hijgo/go-bloc/actions/workflows/lint_and_test.yaml/badge.svg)<br/>
-This package provides a adaption of the BloC Design Pattern for go.<br/>
+This package provides an adaption of the BloC Design Pattern for go.<br/>
 You can use the library to structure your code easily and increase the maintainability of your project at the same time.<br/>
 
 ## What is the BloC Design Pattern? 😅
@@ -17,4 +17,4 @@ BloC can be useful in go the same way as it can be inside Flutter. Whenever your
 When the presenting layer and the data layer are separated, with a BloC as a middleman, your project structure will become much clearer. Therefore, your code will become more readable and easier to understand too. As extra plus point testing will also become much easier, as you can produce any state through feeding events to the BloC.
 
 ## Want to start your BloC-Journey?
-If you want to start with the go-bloc library, please check out the 'Example' directory in this repository to get a head start.
+If you want to start with the go-bloc library, please check out the [Example](https://github.com/hijgo/go-bloc-examples) repository to get a head start.

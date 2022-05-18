@@ -1,8 +1,8 @@
 package bloc
 
 import (
-	"dev.hijgo.go-bloc/event"
-	"dev.hijgo.go-bloc/stream"
+	"github.com/hijgo/go-bloc/event"
+	"github.com/hijgo/go-bloc/stream"
 	"reflect"
 	"sync"
 	"testing"

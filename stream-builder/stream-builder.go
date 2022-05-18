@@ -1,7 +1,7 @@
 package stream_builder
 
 import (
-	"dev.hijgo.go-bloc/bloc"
+	"github.com/hijgo/go-bloc/bloc"
 )
 
 type StreamBuilder[E any, S any, AD any] struct {
