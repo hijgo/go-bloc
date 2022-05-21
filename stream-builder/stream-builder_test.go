@@ -33,10 +33,14 @@ func TestInitStreamBuilder(t *testing.T) {
 	wg.Add(1)
 
 	b := bloc.CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: E.Data.Data} })
-	streamBuilder := InitStreamBuilder[Event, State, BD](b, &initialEvent, func(NewState State) {
+	streamBuilder, err := InitStreamBuilder[Event, State, BD](b, &initialEvent, func(NewState State) {
 		value = NewState.State
 		wg.Done()
 	})
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
+
 	if value := reflect.TypeOf(streamBuilder.BloC); value != reflect.TypeOf(b) {
 		t.Errorf("Expected BloC Of Type '%s' Actual '%s'", reflect.TypeOf(b), value)
 	}
@@ -79,10 +83,13 @@ func TestStreamBuilder_Dispose(t *testing.T) {
 	wgBuild.Add(1)
 
 	b := bloc.CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: E.Data.Data} })
-	streamBuilder := InitStreamBuilder[Event, State, BD](b, &initialEvent, func(NewState State) {
+	streamBuilder, err := InitStreamBuilder[Event, State, BD](b, &initialEvent, func(NewState State) {
 		value = NewState.State
 		wgBuild.Done()
 	})
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
 
 	wgBuild.Wait()
 	if value != 1 {

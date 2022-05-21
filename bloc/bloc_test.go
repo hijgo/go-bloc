@@ -1,6 +1,7 @@
 package bloc
 
 import (
+	"errors"
 	"github.com/hijgo/go-bloc/event"
 	"github.com/hijgo/go-bloc/stream"
 	"reflect"
@@ -62,10 +63,8 @@ func TestBloC_StartListenToEventStream(t *testing.T) {
 		t.Errorf("Expected value To Be Of Value '%d' Actual '%d'", 0, value)
 	}
 
-	b.StartListenToEventStream()
-
-	if returnValue := b.StartListenToEventStream(); returnValue {
-		t.Errorf("Expected value To Be Of Value '%t' Actual '%t'", false, returnValue)
+	if err := b.StartListenToEventStream(); err != nil {
+		t.Errorf("Expected StartListenToEventStream To Return No Error Actual '%s'", err.Error())
 	}
 
 	wg.Add(1)
@@ -74,6 +73,25 @@ func TestBloC_StartListenToEventStream(t *testing.T) {
 	if value != 2 {
 		t.Errorf("Expected value To Be Of Value '%d' Actual '%d'", 2, value)
 	}
+
+	defer b.Dispose()
+}
+
+func TestBloC_StartListenToEventStreamShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
+	bd := BD{}
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
+
+	err := b.eventStream.Listen()
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
+	err = b.StartListenToEventStream()
+	if err == nil {
+		t.Errorf("Expected StartListenToEventStream To Return Error When Already Listened To")
+	} else if wantedErr := errors.New("stream already listened to"); err.Error() != wantedErr.Error() {
+		t.Errorf("Expected StartListenToEventStream To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
+	}
+	defer b.Dispose()
 }
 
 func TestBloC_StopListenToEventStream(t *testing.T) {
@@ -87,7 +105,11 @@ func TestBloC_StopListenToEventStream(t *testing.T) {
 		wg.Done()
 	}
 
-	b.StartListenToEventStream()
+	err := b.StartListenToEventStream()
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
+
 	wg.Add(1)
 	b.AddEvent(Event{Data: 1})
 	wg.Wait()
@@ -95,12 +117,30 @@ func TestBloC_StopListenToEventStream(t *testing.T) {
 		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, value)
 	}
 
-	b.StopListenToEventStream()
-	b.AddEvent(Event{Data: 2})
+	err = b.StopListenToEventStream()
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
 
+	b.AddEvent(Event{Data: 2})
 	if value != 1 {
 		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, value)
 	}
+	defer b.Dispose()
+}
+
+func TestBloC_StopListenToEventStreamShouldReturnErrorWhenNotListenedTo(t *testing.T) {
+	bd := BD{}
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
+
+	err := b.StopListenToEventStream()
+	if err == nil {
+		t.Errorf("Expected StopListenToEventStream To Return Error When Already Listened To")
+	} else if wantedErr := errors.New("stream isn't listened to"); err.Error() != wantedErr.Error() {
+		t.Errorf("Expected StopListenToEventStream To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
+	}
+	defer b.Dispose()
+
 }
 
 func TestBloC_ListenOnNewState(t *testing.T) {
@@ -111,16 +151,18 @@ func TestBloC_ListenOnNewState(t *testing.T) {
 	})
 	value := 0
 
-	b.StartListenToEventStream()
+	err := b.StartListenToEventStream()
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
 	b.AddEvent(Event{Data: 1})
 
-	b.ListenOnNewState(func(S State) {
+	err = b.ListenOnNewState(func(S State) {
 		value = S.State
 		wg.Done()
 	})
-
-	if returnValue := b.ListenOnNewState(func(S State) { value = S.State }); returnValue {
-		t.Errorf("Expected value To Be Of Value '%t' Actual '%t'", false, returnValue)
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
 	}
 
 	if value != 0 {
@@ -133,6 +175,27 @@ func TestBloC_ListenOnNewState(t *testing.T) {
 	if value != 2 {
 		t.Errorf("Expected value To Be Of Value '%d' Actual '%d'", 2, value)
 	}
+	defer b.Dispose()
+}
+
+func TestBloC_ListenOnNewStateShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
+	bd := BD{}
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State {
+		return State{State: 2 * E.Data.Data}
+	})
+
+	err := b.ListenOnNewState(func(state State) {})
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
+
+	err = b.ListenOnNewState(func(state State) {})
+	if err == nil {
+		t.Errorf("Expected ListenOnNewState To Return Error When Already Listened To")
+	} else if wantedErr := errors.New("stream already listened to"); err.Error() != wantedErr.Error() {
+		t.Errorf("Expected ListenOnNewState To Return Error With Message '%s' Actual '%s'", wantedErr.Error(), err.Error())
+	}
+	defer b.Dispose()
 }
 
 func TestBloC_StopListenToStateStream(t *testing.T) {
@@ -142,18 +205,21 @@ func TestBloC_StopListenToStateStream(t *testing.T) {
 	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { defer wgEvent.Done(); return State{State: 2 * E.Data.Data} })
 	value := 0
 
-	b.StartListenToEventStream()
+	err := b.StartListenToEventStream()
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
+
 	wgEvent.Add(1)
 	b.AddEvent(Event{Data: 1})
 	wgEvent.Wait()
 
-	b.ListenOnNewState(func(S State) {
+	err = b.ListenOnNewState(func(S State) {
 		value = S.State
 		wgState.Done()
 	})
-
-	if returnValue := b.ListenOnNewState(func(S State) { value = S.State }); returnValue {
-		t.Errorf("Expected value To Be Of Value '%t' Actual '%t'", false, returnValue)
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
 	}
 
 	if value != 0 {
@@ -169,13 +235,30 @@ func TestBloC_StopListenToStateStream(t *testing.T) {
 		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 2, value)
 	}
 
-	b.StopListenToStateStream()
+	err = b.StopListenToStateStream()
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
 	wgEvent.Add(1)
 	b.AddEvent(Event{Data: 2})
 	wgEvent.Wait()
 	if value != 2 {
 		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 2, value)
 	}
+	defer b.Dispose()
+}
+
+func TestBloC_StopListenToStateStreamShouldReturnErrorWhenNotListenedTo(t *testing.T) {
+	bd := BD{}
+	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
+
+	err := b.StopListenToStateStream()
+	if err == nil {
+		t.Errorf("Expected StopListenToStateStream To Return Error When Not Listened To")
+	} else if wantedErr := errors.New("stream isn't listened to"); err.Error() != wantedErr.Error() {
+		t.Errorf("Expected StopListenToStateStream To Return Error With Message '%s' Actual '%s'", wantedErr.Error(), err.Error())
+	}
+	defer b.Dispose()
 }
 
 func TestBloC_AddEvent(t *testing.T) {
@@ -183,7 +266,12 @@ func TestBloC_AddEvent(t *testing.T) {
 	bd := BD{}
 	value := 0
 	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { defer wg.Done(); value += E.Data.Data; return State{} })
-	b.StartListenToEventStream()
+
+	err := b.StartListenToEventStream()
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
+
 	wg.Add(1)
 	b.AddEvent(Event{Data: 1})
 	wg.Wait()

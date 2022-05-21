@@ -1,7 +1,6 @@
 package stream
 
 import (
-	"errors"
 	"fmt"
 	err "github.com/hijgo/go-bloc/error"
 	"sync"
@@ -61,7 +60,7 @@ func (s *Stream[_]) StopListen() error {
 		defer func() {}()
 		return &err.Error{
 			Context: "Cannot call stop listening when stream isn't listened to!",
-			Err:     errors.New("stream isn't listened to"),
+			Err:     fmt.Errorf("stream isn't listened to"),
 		}
 	}
 	s.isListenedTo = false
@@ -77,12 +76,12 @@ func (s *Stream[T]) Listen() error {
 	if s.isListenedTo {
 		return &err.Error{
 			Context: "Cannot listen to stream, already being listened to!",
-			Err:     errors.New("stream already listened to"),
+			Err:     fmt.Errorf("stream already listened to"),
 		}
 	} else if s.wasDisposed {
 		return &err.Error{
 			Context: "Cannot listen to stream, stream was disposed!",
-			Err:     errors.New("stream was disposed"),
+			Err:     fmt.Errorf("stream was disposed"),
 		}
 	}
 
@@ -115,7 +114,7 @@ func (s *Stream[T]) Listen() error {
 
 // GetQueueSize
 // Returning the current length of the queue.
-func (s Stream[_]) GetQueueSize() int {
+func (s *Stream[_]) GetQueueSize() int {
 	return len(s.queue)
 }
 
@@ -126,7 +125,7 @@ func (s Stream[_]) GetQueueSize() int {
 //
 // Position - The position in the queue from where the queue should be resumed
 // Will return an error when the given position is not inside the queue range.
-func (s Stream[T]) ResumeAtQueuePosition(Position int) error {
+func (s *Stream[T]) ResumeAtQueuePosition(Position int) error {
 	s.waitForResumeAtPositionCompletion.Wait()
 	s.waitForResumeAtPositionCompletion.Add(1)
 	s.pauseListen <- true
@@ -138,7 +137,7 @@ func (s Stream[T]) ResumeAtQueuePosition(Position int) error {
 		}()
 		return &err.Error{
 			Context: "Wanted Position not in range of queue",
-			Err:     errors.New(fmt.Sprintf("position '%d' out of range '%d'", Position, len(s.queue))),
+			Err:     fmt.Errorf("position '%d' out of range '%d'", Position, len(s.queue)),
 		}
 	}
 
