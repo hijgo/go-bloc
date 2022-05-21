@@ -245,6 +245,10 @@ func TestStream_ListenShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
 	s := CreateStream[int](1, func(NewItem int) {})
 
 	err := s.Listen()
+	if err != nil {
+		t.Errorf("Unexpected error occured: %s", err.Error())
+	}
+
 	err = s.Listen()
 	if err == nil {
 		t.Errorf("Expected Listen To Return Error When Already Listend To")
@@ -266,7 +270,7 @@ func TestStream_ResumeAtQueuePositionShouldReturnErrorWhenPositionNotInRange(t *
 	s.waitForResumeAtPositionCompletion.Wait()
 	if err == nil {
 		t.Errorf("Expected ResumeAtQueuePosition To Return Error When Position Out Of Range")
-	} else if wantedErr := errors.New(fmt.Sprintf("position '%d' out of range '%d'", 0, len(s.queue))); err.Error() != wantedErr.Error() {
+	} else if wantedErr := fmt.Errorf("position '%d' out of range '%d'", 0, len(s.queue)); err.Error() != wantedErr.Error() {
 		t.Errorf("Expected Listen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
 	}
 
@@ -274,7 +278,7 @@ func TestStream_ResumeAtQueuePositionShouldReturnErrorWhenPositionNotInRange(t *
 	s.waitForResumeAtPositionCompletion.Wait()
 	if err == nil {
 		t.Errorf("Expected ResumeAtQueuePosition To Return Error When Position Out Of Range")
-	} else if wantedErr := errors.New(fmt.Sprintf("position '%d' out of range '%d'", -2, len(s.queue))); err.Error() != wantedErr.Error() {
+	} else if wantedErr := fmt.Errorf("position '%d' out of range '%d'", -2, len(s.queue)); err.Error() != wantedErr.Error() {
 		t.Errorf("Expected Listen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
 	}
 

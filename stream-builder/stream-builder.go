@@ -37,6 +37,9 @@ func InitStreamBuilder[E any, S any, BD any](BloC bloc.BloC[E, S, BD], InitialEv
 	}
 
 	err := streamBuilder.BloC.StartListenToEventStream()
+	if err != nil {
+		return streamBuilder, err
+	}
 	err = streamBuilder.BloC.ListenOnNewState(BuildFunc)
 	streamBuilder.BloC.AddEvent(*InitialEvent)
 	return streamBuilder, err
