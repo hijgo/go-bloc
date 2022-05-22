@@ -12,8 +12,8 @@ import (
 func TestCreateStream(t *testing.T) {
 	s := CreateStream[struct{}](10, func(NewItem struct{}) {})
 
-	if value := s.MaxQueueSize; value != 10 {
-		t.Errorf("Expected Field MaxQueueSize To Equal '%d' Actual '%d'", 10, value)
+	if value := s.MaxHistorySize; value != 10 {
+		t.Errorf("Expected Field MaxHistorySize To Equal '%d' Actual '%d'", 10, value)
 	}
 
 	if value := reflect.TypeOf(s.OnNewItem); value != reflect.TypeOf(func(struct{}) {}) {
@@ -32,16 +32,16 @@ func TestCreateStream(t *testing.T) {
 		t.Errorf("Expected stopListen Of Type '%s' Actual '%s'", reflect.TypeOf(reflect.TypeOf(make(chan struct{}))), value)
 	}
 
-	if value := reflect.TypeOf(s.queue); value != reflect.TypeOf(make([]*struct{}, 0)) {
-		t.Errorf("Expected queue Of Type '%s' Actual '%s'", reflect.TypeOf(reflect.TypeOf(make([]*struct{}, 0))), value)
+	if value := reflect.TypeOf(s.history); value != reflect.TypeOf(make([]*struct{}, 0)) {
+		t.Errorf("Expected history Of Type '%s' Actual '%s'", reflect.TypeOf(reflect.TypeOf(make([]*struct{}, 0))), value)
 	}
 
-	if value := len(s.queue); value != 0 {
-		t.Errorf("Expected len(queue) Of Value '%d' Actual '%d'", 0, value)
+	if value := len(s.history); value != 0 {
+		t.Errorf("Expected len(history) Of Value '%d' Actual '%d'", 0, value)
 	}
 
-	if value := cap(s.queue); value != 10 {
-		t.Errorf("Expected len(queue) Of Value '%d' Actual '%d'", 10, value)
+	if value := cap(s.history); value != 10 {
+		t.Errorf("Expected len(history) Of Value '%d' Actual '%d'", 10, value)
 	}
 
 }
@@ -52,8 +52,8 @@ func TestStream_Add(t *testing.T) {
 	val1, val2, val3 := 1, 2, 3
 
 	s.Add(val1)
-	if value := s.GetQueueSize(); value != 1 {
-		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 1, value)
+	if value := s.GetHistorySize(); value != 1 {
+		t.Errorf("Expected GetHistorySize To Equal '%d' Actual '%d'", 1, value)
 	}
 
 	s.Add(val2)
@@ -65,29 +65,29 @@ func TestStream_Add(t *testing.T) {
 	wg.Add(1)
 	s.Add(val3)
 	wg.Wait()
-	if value := s.GetQueueSize(); value != 2 {
-		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 2, value)
+	if value := s.GetHistorySize(); value != 2 {
+		t.Errorf("Expected GetHistorySize To Equal '%d' Actual '%d'", 2, value)
 	}
 
 	expectedValues := []*int{&val2, &val3}
-	for i, v := range s.queue {
+	for i, v := range s.history {
 		if value := *expectedValues[i]; value != *v {
-			t.Errorf("Expected queue To Equal '%d' At Position '%d' Actual '%d'", value, i, *v)
+			t.Errorf("Expected history To Equal '%d' At Position '%d' Actual '%d'", value, i, *v)
 		}
 	}
 
 	defer s.Dispose()
 }
 
-func TestStream_GetQueueSize(t *testing.T) {
+func TestStream_GetHistorySize(t *testing.T) {
 	s := CreateStream[int](2, func(int) {})
 
-	if value := s.GetQueueSize(); value != 0 {
-		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 0, value)
+	if value := s.GetHistorySize(); value != 0 {
+		t.Errorf("Expected GetHistorySize To Equal '%d' Actual '%d'", 0, value)
 	}
 	s.Add(1)
-	if value := s.GetQueueSize(); value != 1 {
-		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 1, value)
+	if value := s.GetHistorySize(); value != 1 {
+		t.Errorf("Expected GetHistorySize To Equal '%d' Actual '%d'", 1, value)
 	}
 }
 
@@ -134,8 +134,8 @@ func TestStream_StopListen(t *testing.T) {
 		t.Errorf("Expected value To Equal '%d' Actual '%d'", val1, value)
 	}
 
-	if value := s.GetQueueSize(); value != 1 {
-		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 1, value)
+	if value := s.GetHistorySize(); value != 1 {
+		t.Errorf("Expected GetHistorySize To Equal '%d' Actual '%d'", 1, value)
 	}
 
 	err = s.StopListen()
@@ -144,8 +144,8 @@ func TestStream_StopListen(t *testing.T) {
 	}
 
 	s.Add(val2)
-	if value := s.GetQueueSize(); value != 2 {
-		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 2, value)
+	if value := s.GetHistorySize(); value != 2 {
+		t.Errorf("Expected GetHistorySize To Equal '%d' Actual '%d'", 2, value)
 	}
 
 	if value != val1 {
@@ -153,15 +153,15 @@ func TestStream_StopListen(t *testing.T) {
 	}
 
 	expectedValues := []*int{&val1, &val2}
-	for i, v := range s.queue {
+	for i, v := range s.history {
 		if value := *expectedValues[i]; value != *v {
-			t.Errorf("Expected queue To Equal '%d' At Position '%d' Actual '%d'", value, i, *v)
+			t.Errorf("Expected history To Equal '%d' At Position '%d' Actual '%d'", value, i, *v)
 		}
 	}
 
 }
 
-func TestStream_ResumeAtQueuePosition(t *testing.T) {
+func TestStream_ResumeAtHistoryPosition(t *testing.T) {
 	var wg sync.WaitGroup
 	value := 0
 	s := CreateStream[int](2, func(NewItem int) { time.Sleep(50 * time.Millisecond); value += NewItem; wg.Done() })
@@ -178,12 +178,12 @@ func TestStream_ResumeAtQueuePosition(t *testing.T) {
 	if value != val1 {
 		t.Errorf("Expected value To Equal '%d' Actual '%d'", val1, value)
 	}
-	if value := s.GetQueueSize(); value != 1 {
-		t.Errorf("Expected GetQueueSize To Equal '%d' Actual '%d'", 1, value)
+	if value := s.GetHistorySize(); value != 1 {
+		t.Errorf("Expected GetHistorySize To Equal '%d' Actual '%d'", 1, value)
 	}
 
 	wg.Add(2)
-	err = s.ResumeAtQueuePosition(0)
+	err = s.ResumeAtHistoryPosition(0)
 	s.Add(val2)
 	if err != nil {
 		t.Errorf("Unexpected error occured: %s", err.Error())
@@ -195,9 +195,9 @@ func TestStream_ResumeAtQueuePosition(t *testing.T) {
 	}
 
 	expectedValues := []*int{&val1, &val2}
-	for i, v := range s.queue {
+	for i, v := range s.history {
 		if value := *expectedValues[i]; value != *v {
-			t.Errorf("Expected queue To Equal '%d' At Position '%d' Actual '%d'", value, i, *v)
+			t.Errorf("Expected history To Equal '%d' At Position '%d' Actual '%d'", value, i, *v)
 		}
 	}
 	defer s.Dispose()
@@ -259,26 +259,26 @@ func TestStream_ListenShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
 	defer s.Dispose()
 }
 
-func TestStream_ResumeAtQueuePositionShouldReturnErrorWhenPositionNotInRange(t *testing.T) {
+func TestStream_ResumeAtHistoryPositionShouldReturnErrorWhenPositionNotInRange(t *testing.T) {
 	s := CreateStream[int](1, func(NewItem int) {})
 	err := s.Listen()
 	if err != nil {
 		t.Errorf("Unexpected error occured: %s", err.Error())
 	}
 
-	err = s.ResumeAtQueuePosition(0)
+	err = s.ResumeAtHistoryPosition(0)
 	s.waitForResumeAtPositionCompletion.Wait()
 	if err == nil {
-		t.Errorf("Expected ResumeAtQueuePosition To Return Error When Position Out Of Range")
-	} else if wantedErr := fmt.Errorf("position '%d' out of range '%d'", 0, len(s.queue)); err.Error() != wantedErr.Error() {
+		t.Errorf("Expected ResumeAtHistoryPosition To Return Error When Position Out Of Range")
+	} else if wantedErr := fmt.Errorf("position '%d' out of range '%d'", 0, len(s.history)); err.Error() != wantedErr.Error() {
 		t.Errorf("Expected Listen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
 	}
 
-	err = s.ResumeAtQueuePosition(-2)
+	err = s.ResumeAtHistoryPosition(-2)
 	s.waitForResumeAtPositionCompletion.Wait()
 	if err == nil {
-		t.Errorf("Expected ResumeAtQueuePosition To Return Error When Position Out Of Range")
-	} else if wantedErr := fmt.Errorf("position '%d' out of range '%d'", -2, len(s.queue)); err.Error() != wantedErr.Error() {
+		t.Errorf("Expected ResumeAtHistoryPosition To Return Error When Position Out Of Range")
+	} else if wantedErr := fmt.Errorf("position '%d' out of range '%d'", -2, len(s.history)); err.Error() != wantedErr.Error() {
 		t.Errorf("Expected Listen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
 	}
 
