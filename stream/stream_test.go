@@ -10,7 +10,7 @@ import (
 )
 
 func TestCreateStream(t *testing.T) {
-	s := CreateStream[struct{}](10, func(NewItem struct{}) {})
+	s := CreateStream(10, func(NewItem struct{}) {})
 
 	if value := s.MaxHistorySize; value != 10 {
 		t.Errorf("Expected Field MaxHistorySize To Equal '%d' Actual '%d'", 10, value)
@@ -43,12 +43,11 @@ func TestCreateStream(t *testing.T) {
 	if value := cap(s.history); value != 10 {
 		t.Errorf("Expected len(history) Of Value '%d' Actual '%d'", 10, value)
 	}
-
 }
 
 func TestStream_Add(t *testing.T) {
 	var wg sync.WaitGroup
-	s := CreateStream[int](2, func(int) { wg.Done() })
+	s := CreateStream(2, func(int) { wg.Done() })
 	val1, val2, val3 := 1, 2, 3
 
 	s.Add(val1)
@@ -80,7 +79,7 @@ func TestStream_Add(t *testing.T) {
 }
 
 func TestStream_GetHistorySize(t *testing.T) {
-	s := CreateStream[int](2, func(int) {})
+	s := CreateStream(2, func(int) {})
 
 	if value := s.GetHistorySize(); value != 0 {
 		t.Errorf("Expected GetHistorySize To Equal '%d' Actual '%d'", 0, value)
@@ -94,7 +93,7 @@ func TestStream_GetHistorySize(t *testing.T) {
 func TestStream_Listen(t *testing.T) {
 	var wg sync.WaitGroup
 	value := 0
-	s := CreateStream[int](1, func(NewItem int) { value += NewItem; wg.Done() })
+	s := CreateStream(1, func(NewItem int) { value += NewItem; wg.Done() })
 
 	s.Add(1)
 	if value != 0 {
@@ -119,7 +118,7 @@ func TestStream_Listen(t *testing.T) {
 func TestStream_StopListen(t *testing.T) {
 	var wg sync.WaitGroup
 	value := 0
-	s := CreateStream[int](2, func(NewItem int) { value += NewItem; wg.Done() })
+	s := CreateStream(2, func(NewItem int) { value += NewItem; wg.Done() })
 	val1, val2 := 1, 2
 
 	err := s.Listen()
@@ -164,7 +163,7 @@ func TestStream_StopListen(t *testing.T) {
 func TestStream_ResumeAtHistoryPosition(t *testing.T) {
 	var wg sync.WaitGroup
 	value := 0
-	s := CreateStream[int](2, func(NewItem int) { time.Sleep(50 * time.Millisecond); value += NewItem; wg.Done() })
+	s := CreateStream(2, func(NewItem int) { time.Sleep(50 * time.Millisecond); value += NewItem; wg.Done() })
 	val1, val2 := 1, 2
 
 	err := s.Listen()
@@ -205,7 +204,7 @@ func TestStream_ResumeAtHistoryPosition(t *testing.T) {
 }
 
 func TestStream_GetListenStatus(t *testing.T) {
-	s := CreateStream[int](2, func(NewItem int) {})
+	s := CreateStream(2, func(NewItem int) {})
 	if value := s.GetListenStatus(); value {
 		t.Errorf("Expected GetListenStatus To Equal '%t' Actual '%t'", false, value)
 	}
@@ -220,7 +219,7 @@ func TestStream_GetListenStatus(t *testing.T) {
 }
 
 func TestStream_Dispose(t *testing.T) {
-	s := CreateStream[int](1, func(NewItem int) {})
+	s := CreateStream(1, func(NewItem int) {})
 
 	s.Dispose()
 	if value := s.wasDisposed; !value {
@@ -229,7 +228,7 @@ func TestStream_Dispose(t *testing.T) {
 }
 
 func TestStream_ListenShouldReturnErrorWhenAlreadyDisposed(t *testing.T) {
-	s := CreateStream[int](1, func(NewItem int) {})
+	s := CreateStream(1, func(NewItem int) {})
 
 	s.Dispose()
 
@@ -242,7 +241,7 @@ func TestStream_ListenShouldReturnErrorWhenAlreadyDisposed(t *testing.T) {
 }
 
 func TestStream_ListenShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
-	s := CreateStream[int](1, func(NewItem int) {})
+	s := CreateStream(1, func(NewItem int) {})
 
 	err := s.Listen()
 	if err != nil {
@@ -260,7 +259,7 @@ func TestStream_ListenShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
 }
 
 func TestStream_ResumeAtHistoryPositionShouldReturnErrorWhenPositionNotInRange(t *testing.T) {
-	s := CreateStream[int](1, func(NewItem int) {})
+	s := CreateStream(1, func(NewItem int) {})
 	err := s.Listen()
 	if err != nil {
 		t.Errorf("Unexpected error occured: %s", err.Error())
@@ -286,7 +285,7 @@ func TestStream_ResumeAtHistoryPositionShouldReturnErrorWhenPositionNotInRange(t
 }
 
 func TestStream_StopListenShouldReturnErrorWhenAlreadyStopped(t *testing.T) {
-	s := CreateStream[int](1, func(NewItem int) {})
+	s := CreateStream(1, func(NewItem int) {})
 
 	err := s.StopListen()
 	if err == nil {

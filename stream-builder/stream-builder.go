@@ -4,7 +4,6 @@ import (
 	"github.com/hijgo/go-bloc/bloc"
 )
 
-// StreamBuilder
 // Wrap around structure for the Business Logic Component, that will simplify the BloC experience.
 //
 // E : Type of events being emitted into the BloC
@@ -20,7 +19,6 @@ type StreamBuilder[E any, S any, BD any] struct {
 	builderFunc  func(S)
 }
 
-// InitStreamBuilder
 // Function that should be called if a new StreamBuilder is needed.
 //
 // Will create all necessary values so the StreamBuilder can function properly and then return the new StreamBuilder
@@ -55,7 +53,6 @@ func InitStreamBuilder[E any, S any, BD any](BloC bloc.BloC[E, S, BD], InitialEv
 	return streamBuilder, err
 }
 
-// Dispose
 // If the StreamBuilder is no longer needed call this function to clear it gracefully
 func (sB *StreamBuilder[E, S, AD]) Dispose() {
 	err := sB.BloC.StopListenToEventStream()

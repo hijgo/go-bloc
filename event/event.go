@@ -2,7 +2,6 @@ package event
 
 import "time"
 
-// Event
 // Structure that will be passed into a sink of a stream.
 //
 // T : The type of data carried with by the event struct.
@@ -15,7 +14,6 @@ type Event[T any] struct {
 	Data      T
 }
 
-// CreateEvent
 // Function that will create a new Event[T] and then return it.
 //
 // T : The type of data carried with by the event struct.

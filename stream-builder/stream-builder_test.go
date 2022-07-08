@@ -2,12 +2,13 @@ package stream_builder
 
 import (
 	"fmt"
-	"github.com/hijgo/go-bloc/bloc"
-	"github.com/hijgo/go-bloc/event"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/hijgo/go-bloc/bloc"
+	"github.com/hijgo/go-bloc/event"
 )
 
 type Event struct {
@@ -32,8 +33,8 @@ func TestInitStreamBuilder(t *testing.T) {
 
 	wg.Add(1)
 
-	b := bloc.CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: E.Data.Data} })
-	streamBuilder, err := InitStreamBuilder[Event, State, BD](b, &initialEvent, func(NewState State) {
+	b := bloc.CreateBloC(bd, func(E event.Event[Event], BD *BD) State { return State{State: E.Data.Data} })
+	streamBuilder, err := InitStreamBuilder(b, &initialEvent, func(NewState State) {
 		value = NewState.State
 		wg.Done()
 	})
@@ -82,8 +83,8 @@ func TestStreamBuilder_Dispose(t *testing.T) {
 
 	wgBuild.Add(1)
 
-	b := bloc.CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{State: E.Data.Data} })
-	streamBuilder, err := InitStreamBuilder[Event, State, BD](b, &initialEvent, func(NewState State) {
+	b := bloc.CreateBloC(bd, func(E event.Event[Event], BD *BD) State { return State{State: E.Data.Data} })
+	streamBuilder, err := InitStreamBuilder(b, &initialEvent, func(NewState State) {
 		value = NewState.State
 		wgBuild.Done()
 	})

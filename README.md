@@ -3,6 +3,9 @@
 This package provides an adaption of the BloC Design Pattern for go.<br/>
 You can use the library to structure your code easily and increase the maintainability of your project at the same time.<br/>
 
+## Installation
+    go get github.com/hijgo/go-bloc
+
 ## What is the BloC Design Pattern? 😅
 Generally speaking, BLoC (Business Logic Component) is a design pattern enabling developers to efficiently and conveniently manage state across their apps without a tight coupling between the presentation (view) and the logic. It also aims for reusability of the same logic across multiple widgets. It was first mentioned by Google at the Google I/O in 2018.
  -- <cite>[flutterclutter.dev](https://www.flutterclutter.dev/flutter/basics/what-is-the-bloc-pattern/2021/2084/)</cite>

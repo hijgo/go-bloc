@@ -2,11 +2,11 @@ package stream
 
 import (
 	"fmt"
-	err "github.com/hijgo/go-bloc/error"
 	"sync"
+
+	err "github.com/hijgo/go-bloc/error"
 )
 
-// Stream
 // A structure that defines the operating values of a stream.
 // Such as type of data being processed, behaviour when a new item is being passed down the stream
 // and the size of the queue used as history.
@@ -25,10 +25,10 @@ type Stream[T any] struct {
 	stopListen                        chan struct{}
 	history                           []*T
 	wasDisposed                       bool
+	noHistory                         bool
 	waitForResumeAtPositionCompletion sync.WaitGroup
 }
 
-// CreateStream
 // Function that should be called if a new stream is needed.
 // Will create all necessary values so the stream can function properly and then return the new Stream of type T.
 //
@@ -45,16 +45,15 @@ func CreateStream[T any](MaxHistorySize int, OnNewItem func(NewItem T)) Stream[T
 		pauseListen:    make(chan bool),
 		stopListen:     make(chan struct{}),
 		history:        make([]*T, 0, MaxHistorySize),
+		noHistory:      !(MaxHistorySize > 0),
 	}
 }
 
-// GetListenStatus
 // Returns true if the stream is currently listened to, if not returns false.
 func (s *Stream[_]) GetListenStatus() bool {
 	return s.isListenedTo
 }
 
-// StopListen
 // Will stop listening to the stream of incoming items. Any new item being passed into the stream will not be processed
 // by the OnNewItem function, but will be stored in the history.
 //
@@ -74,7 +73,6 @@ func (s *Stream[_]) StopListen() error {
 	return nil
 }
 
-// Listen
 // Called to start listening to a stream of items. If the stream is already listened to, will return an error.
 // Else will set the listening status to true and start processing new items with the OnNewItem function.
 func (s *Stream[T]) Listen() error {
@@ -117,13 +115,11 @@ func (s *Stream[T]) Listen() error {
 	return nil
 }
 
-// GetHistorySize
 // Returning the current length of the history.
 func (s *Stream[_]) GetHistorySize() int {
 	return len(s.history)
 }
 
-// ResumeAtHistoryPosition
 // Will temporally pause listening to stream to allow going back to a previous event. When paused new items will be
 // processed when listening is resumed. All items in the history before the given position will be dropped.
 // Use with caution.
@@ -136,7 +132,7 @@ func (s *Stream[T]) ResumeAtHistoryPosition(Position int) error {
 	s.waitForResumeAtPositionCompletion.Add(1)
 	s.pauseListen <- true
 
-	if HistoryLength := len(s.history); Position < 0 || Position > HistoryLength || 0 == HistoryLength {
+	if HistoryLength := len(s.history); Position < 0 || Position > HistoryLength || HistoryLength == 0 {
 		defer func() {
 			s.pauseListen <- false
 			s.waitForResumeAtPositionCompletion.Done()
@@ -157,7 +153,6 @@ func (s *Stream[T]) ResumeAtHistoryPosition(Position int) error {
 	return nil
 }
 
-// Add
 // Pass a NewItem into the stream
 // Note: The NewItem will only be processed if the stream is currently listened to.
 //
@@ -166,6 +161,11 @@ func (s *Stream[T]) Add(NewItem T) {
 	if s.isListenedTo {
 		s.sink <- NewItem
 	}
+
+	if s.noHistory {
+		return
+	}
+
 	if len(s.history) >= s.MaxHistorySize {
 		s.history = s.history[1:s.MaxHistorySize]
 		s.history = append(s.history, &NewItem)
@@ -174,7 +174,6 @@ func (s *Stream[T]) Add(NewItem T) {
 	}
 }
 
-// Dispose
 // Will close all channels used by the stream, in addition to that will also stop listening to stream.
 // After disposing the stream cannot be listened to ever again.
 func (s *Stream[_]) Dispose() {
