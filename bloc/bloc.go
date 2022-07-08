@@ -7,7 +7,6 @@ import (
 
 var DefaultMaxHistorySize = 100
 
-// BloC
 // Business Logic Component, that will provide event and state streams for further use.
 //
 // E : Type of events being emitted into the BloC
@@ -23,7 +22,6 @@ type BloC[E any, S any, BD any] struct {
 	mapEventToState func(NewEvent event.Event[E], AdditionalData *BD) S
 }
 
-// CreateBloC
 // Function that should be called if a new BloC is needed.
 // Will populate all necessary fields so the BloC can function properly and then return the new BloC of type E,S,BD.
 //
@@ -43,8 +41,8 @@ func CreateBloC[E any, S any, BD any](InitialBloCData BD, mapEventToState func(N
 		BloCData:        InitialBloCData,
 		mapEventToState: mapEventToState,
 	}
-	stateStream := stream.CreateStream[S](DefaultMaxHistorySize, func(NewItem S) {})
-	eventStream := stream.CreateStream[event.Event[E]](DefaultMaxHistorySize, func(NewEvent event.Event[E]) {
+	stateStream := stream.CreateStream(DefaultMaxHistorySize, func(NewItem S) {})
+	eventStream := stream.CreateStream(DefaultMaxHistorySize, func(NewEvent event.Event[E]) {
 		stateStream.Add(mapEventToState(NewEvent, &newBloC.BloCData))
 	})
 	newBloC.stateStream = &stateStream
@@ -52,16 +50,14 @@ func CreateBloC[E any, S any, BD any](InitialBloCData BD, mapEventToState func(N
 	return newBloC
 }
 
-// AddEvent
 // Should be called when a new Event should be passed to the event stream.
 // Will result ultimately in a new state.
 //
 // NewEvent : The event of type E that should be passed to the event stream.
 func (b *BloC[E, S, AD]) AddEvent(NewEvent E) {
-	b.eventStream.Add(event.CreateEvent[E](NewEvent))
+	b.eventStream.Add(event.CreateEvent(NewEvent))
 }
 
-// ListenOnNewState
 // Start listening to the state stream by calling the function.
 //
 // OnNewState : Function that must accept a new state of type S
@@ -74,7 +70,6 @@ func (b *BloC[E, S, AD]) ListenOnNewState(OnNewState func(S)) error {
 	return b.stateStream.Listen()
 }
 
-// StopListenToStateStream
 // Call to stop listen to the state stream.
 //
 // Will return an error if for example the stream wasn't listened to.
@@ -82,7 +77,6 @@ func (b *BloC[E, S, AD]) StopListenToStateStream() error {
 	return b.stateStream.StopListen()
 }
 
-// StartListenToEventStream
 // Start listening to the event stream by calling the function.
 //
 // When called will produce a new state for every new event passed.
@@ -92,7 +86,6 @@ func (b *BloC[E, S, AD]) StartListenToEventStream() error {
 	return b.eventStream.Listen()
 }
 
-// StopListenToEventStream
 // Call to stop listen to the event stream.
 //
 // Will return an error if for example the stream wasn't listened to.
@@ -100,7 +93,6 @@ func (b *BloC[E, S, AD]) StopListenToEventStream() error {
 	return b.eventStream.StopListen()
 }
 
-// Dispose
 // If the BloC is no longer needed call this function to clear it gracefully
 func (b *BloC[E, S, AD]) Dispose() {
 	b.stateStream.Dispose()

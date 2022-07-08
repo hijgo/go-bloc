@@ -11,7 +11,7 @@ jobs:
       - name: setup go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18.1
+          go-version: 1.18.3
       - name: configure private github access
         run: |
           git config --global url."https://${{ secrets.ACTIONS_SECRET }}:x-oauth-basic@github.com/hijgo/go-bloc".insteadOf "https://github.com/hijgo/go-bloc"
@@ -31,4 +31,4 @@ jobs:
           git config --global url."https://${{ secrets.ACTIONS_SECRET }}:x-oauth-basic@github.com/hijgo/go-bloc".insteadOf "https://github.com/hijgo/go-bloc"
       - name: test
         run: |
-          go test -cover  $(go list ./... | grep -v ./Example/...)
+          go test -cover  $(go list ./...)

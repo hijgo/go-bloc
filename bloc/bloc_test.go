@@ -2,11 +2,12 @@ package bloc
 
 import (
 	"errors"
-	"github.com/hijgo/go-bloc/event"
-	"github.com/hijgo/go-bloc/stream"
 	"reflect"
 	"sync"
 	"testing"
+
+	"github.com/hijgo/go-bloc/event"
+	"github.com/hijgo/go-bloc/stream"
 )
 
 type Event struct {
@@ -23,7 +24,7 @@ type State struct {
 
 func TestCreateBloC(t *testing.T) {
 	bd := BD{}
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	if value := reflect.TypeOf(b.eventStream); value != reflect.TypeOf(&stream.Stream[event.Event[Event]]{}) {
 		t.Errorf("Expected eventStream Of Type '%s' Actual '%s'", reflect.TypeOf(&stream.Stream[event.Event[Event]]{}), value)
@@ -50,7 +51,7 @@ func TestBloC_StartListenToEventStream(t *testing.T) {
 	var wg sync.WaitGroup
 	bd := BD{}
 	value := 0
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	b.eventStream.OnNewItem = func(NewItem event.Event[Event]) {
 		value += NewItem.Data.Data
@@ -79,7 +80,7 @@ func TestBloC_StartListenToEventStream(t *testing.T) {
 
 func TestBloC_StartListenToEventStreamShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
 	bd := BD{}
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	err := b.eventStream.Listen()
 	if err != nil {
@@ -98,7 +99,7 @@ func TestBloC_StopListenToEventStream(t *testing.T) {
 	var wg sync.WaitGroup
 	bd := BD{}
 	value := 0
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	b.eventStream.OnNewItem = func(NewItem event.Event[Event]) {
 		value += NewItem.Data.Data
@@ -131,7 +132,7 @@ func TestBloC_StopListenToEventStream(t *testing.T) {
 
 func TestBloC_StopListenToEventStreamShouldReturnErrorWhenNotListenedTo(t *testing.T) {
 	bd := BD{}
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	err := b.StopListenToEventStream()
 	if err == nil {
@@ -146,7 +147,7 @@ func TestBloC_StopListenToEventStreamShouldReturnErrorWhenNotListenedTo(t *testi
 func TestBloC_ListenOnNewState(t *testing.T) {
 	var wg sync.WaitGroup
 	bd := BD{}
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State {
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State {
 		return State{State: 2 * E.Data.Data}
 	})
 	value := 0
@@ -180,7 +181,7 @@ func TestBloC_ListenOnNewState(t *testing.T) {
 
 func TestBloC_ListenOnNewStateShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
 	bd := BD{}
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State {
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State {
 		return State{State: 2 * E.Data.Data}
 	})
 
@@ -202,7 +203,7 @@ func TestBloC_StopListenToStateStream(t *testing.T) {
 	var wgState sync.WaitGroup
 	var wgEvent sync.WaitGroup
 	bd := BD{}
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { defer wgEvent.Done(); return State{State: 2 * E.Data.Data} })
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State { defer wgEvent.Done(); return State{State: 2 * E.Data.Data} })
 	value := 0
 
 	err := b.StartListenToEventStream()
@@ -250,7 +251,7 @@ func TestBloC_StopListenToStateStream(t *testing.T) {
 
 func TestBloC_StopListenToStateStreamShouldReturnErrorWhenNotListenedTo(t *testing.T) {
 	bd := BD{}
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { return State{} })
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State { return State{} })
 
 	err := b.StopListenToStateStream()
 	if err == nil {
@@ -265,7 +266,7 @@ func TestBloC_AddEvent(t *testing.T) {
 	var wg sync.WaitGroup
 	bd := BD{}
 	value := 0
-	b := CreateBloC[Event, State, BD](bd, func(E event.Event[Event], BD *BD) State { defer wg.Done(); value += E.Data.Data; return State{} })
+	b := CreateBloC(bd, func(E event.Event[Event], BD *BD) State { defer wg.Done(); value += E.Data.Data; return State{} })
 
 	err := b.StartListenToEventStream()
 	if err != nil {
