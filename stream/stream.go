@@ -20,6 +20,12 @@ var (
 		Context: "Cannot listen to stream, stream was disposed!",
 		Err:     fmt.Errorf("stream was disposed"),
 	}
+	PosOutOfRangeErr = func(position, historyLength int) error {
+		return err.Error{
+			Context: "Wanted Position not in range of history",
+			Err:     fmt.Errorf("position '%d' out of range '%d'", position, historyLength),
+		}
+	}
 )
 
 // A structure that defines the operating values of a stream.
@@ -126,7 +132,7 @@ func (s *Stream[_]) GetHistorySize() int {
 	return len(s.history)
 }
 
-// Will temporally pause listening to stream to allow going back to a previous event. When paused new items will be
+// Will pause listening to stream to allow going back to a previous event. When paused new items will be
 // processed when listening is resumed. All items in the history before the given position will be dropped.
 // Use with caution.
 //
@@ -143,10 +149,7 @@ func (s *Stream[T]) ResumeAtHistoryPosition(Position int) error {
 			s.pauseListen <- false
 			s.waitForResumeAtPositionCompletion.Done()
 		}()
-		return &err.Error{
-			Context: "Wanted Position not in range of history",
-			Err:     fmt.Errorf("position '%d' out of range '%d'", Position, len(s.history)),
-		}
+		return PosOutOfRangeErr(Position, len(s.history))
 	}
 
 	s.OnNewItem(*s.history[Position])

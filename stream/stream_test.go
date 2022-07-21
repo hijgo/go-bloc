@@ -1,8 +1,6 @@
 package stream
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
 	"sync"
 	"testing"
@@ -235,8 +233,8 @@ func TestStream_ListenShouldReturnErrorWhenAlreadyDisposed(t *testing.T) {
 	err := s.Listen()
 	if err == nil {
 		t.Errorf("Expected Listen To Return Error When Already Disposed")
-	} else if wantedErr := errors.New("stream was disposed"); err.Error() != wantedErr.Error() {
-		t.Errorf("Expected Listen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
+	} else if err != &AlreadyDisposedErr {
+		t.Errorf("Expected Listen To Return Error With Message '%s' Actual '%s'", AlreadyDisposedErr.Error(), err.Error())
 	}
 }
 
@@ -251,8 +249,8 @@ func TestStream_ListenShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
 	err = s.Listen()
 	if err == nil {
 		t.Errorf("Expected Listen To Return Error When Already Listend To")
-	} else if wantedErr := errors.New("stream already listened to"); err.Error() != wantedErr.Error() {
-		t.Errorf("Expected Listen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
+	} else if err != &StartListenErr {
+		t.Errorf("Expected Listen To Return Error With Message '%s' Actual '%s'", StartListenErr.Error(), err.Error())
 	}
 
 	defer s.Dispose()
@@ -269,16 +267,16 @@ func TestStream_ResumeAtHistoryPositionShouldReturnErrorWhenPositionNotInRange(t
 	s.waitForResumeAtPositionCompletion.Wait()
 	if err == nil {
 		t.Errorf("Expected ResumeAtHistoryPosition To Return Error When Position Out Of Range")
-	} else if wantedErr := fmt.Errorf("position '%d' out of range '%d'", 0, len(s.history)); err.Error() != wantedErr.Error() {
-		t.Errorf("Expected Listen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
+	} else if wantedErr := PosOutOfRangeErr(0, 0); err.Error() != wantedErr.Error() {
+		t.Errorf("Expected Listen To Return Error With Message '%s' Actual '%s'", wantedErr.Error(), err.Error())
 	}
 
 	err = s.ResumeAtHistoryPosition(-2)
 	s.waitForResumeAtPositionCompletion.Wait()
 	if err == nil {
 		t.Errorf("Expected ResumeAtHistoryPosition To Return Error When Position Out Of Range")
-	} else if wantedErr := fmt.Errorf("position '%d' out of range '%d'", -2, len(s.history)); err.Error() != wantedErr.Error() {
-		t.Errorf("Expected Listen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
+	} else if wantedErr := PosOutOfRangeErr(-2, 0); err.Error() != wantedErr.Error() {
+		t.Errorf("Expected Listen To Return Error With Message '%s' Actual '%s'", wantedErr.Error(), err.Error())
 	}
 
 	defer s.Dispose()
@@ -290,8 +288,8 @@ func TestStream_StopListenShouldReturnErrorWhenAlreadyStopped(t *testing.T) {
 	err := s.StopListen()
 	if err == nil {
 		t.Errorf("Expected StopListen To Return Error When Not Listened To")
-	} else if wantedErr := errors.New("stream isn't listened to"); err.Error() != wantedErr.Error() {
-		t.Errorf("Expected StopListen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
+	} else if err != StopListenErr {
+		t.Errorf("Expected StopListen To Return Error With Message '%s ' Actual '%s'", StopListenErr, err.Error())
 	}
 
 	err = s.Listen()
@@ -307,7 +305,7 @@ func TestStream_StopListenShouldReturnErrorWhenAlreadyStopped(t *testing.T) {
 	err = s.StopListen()
 	if err == nil {
 		t.Errorf("Expected StopListen To Return Error When Not Listened To")
-	} else if wantedErr := errors.New("stream isn't listened to"); err.Error() != wantedErr.Error() {
-		t.Errorf("Expected StopListen To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
+	} else if err != StopListenErr {
+		t.Errorf("Expected StopListen To Return Error With Message '%s ' Actual '%s'", StopListenErr.Error(), err.Error())
 	}
 }
