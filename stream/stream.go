@@ -7,15 +7,30 @@ import (
 	err "github.com/hijgo/go-bloc/error"
 )
 
+var (
+	StopListenErr = err.Error{
+		Context: "Cannot call stop listening when stream isn't listened to!",
+		Err:     fmt.Errorf("stream isn't listened to"),
+	}
+	StartListenErr = err.Error{
+		Context: "Cannot listen to stream, already being listened to!",
+		Err:     fmt.Errorf("stream already listened to"),
+	}
+	AlreadyDisposedErr = err.Error{
+		Context: "Cannot listen to stream, stream was disposed!",
+		Err:     fmt.Errorf("stream was disposed"),
+	}
+)
+
 // A structure that defines the operating values of a stream.
 // Such as type of data being processed, behaviour when a new item is being passed down the stream
 // and the size of the queue used as history.
 //
-// T : Type of the data that will be processed
+// T: Type of the data that will be processed
 //
-// MaxHistorySize : The capacity of the history being saved
+// MaxHistorySize: The capacity of the history being saved
 //
-// OnNewItem : A Function that will be called everytime a new item is being passed to the stream
+// OnNewItem: A Function that will be called everytime a new item is being passed to the stream
 type Stream[T any] struct {
 	MaxHistorySize                    int
 	OnNewItem                         func(NewItem T)
@@ -62,10 +77,7 @@ func (s *Stream[_]) StopListen() error {
 
 	if !s.isListenedTo {
 		defer func() {}()
-		return &err.Error{
-			Context: "Cannot call stop listening when stream isn't listened to!",
-			Err:     fmt.Errorf("stream isn't listened to"),
-		}
+		return StopListenErr
 	}
 	s.isListenedTo = false
 	defer func() { s.stopListen <- struct{}{} }()
@@ -77,15 +89,9 @@ func (s *Stream[_]) StopListen() error {
 // Else will set the listening status to true and start processing new items with the OnNewItem function.
 func (s *Stream[T]) Listen() error {
 	if s.isListenedTo {
-		return &err.Error{
-			Context: "Cannot listen to stream, already being listened to!",
-			Err:     fmt.Errorf("stream already listened to"),
-		}
+		return &StartListenErr
 	} else if s.wasDisposed {
-		return &err.Error{
-			Context: "Cannot listen to stream, stream was disposed!",
-			Err:     fmt.Errorf("stream was disposed"),
-		}
+		return &AlreadyDisposedErr
 	}
 
 	s.isListenedTo = true
@@ -176,12 +182,9 @@ func (s *Stream[T]) Add(NewItem T) {
 
 // Will close all channels used by the stream, in addition to that will also stop listening to stream.
 // After disposing the stream cannot be listened to ever again.
-func (s *Stream[_]) Dispose() {
+func (s *Stream[_]) Dispose() error {
 	if s.GetListenStatus() {
-		stopError := s.StopListen()
-		if stopError != nil {
-			panic(stopError)
-		}
+		return s.StopListen()
 	}
 
 	defer func() {
@@ -190,4 +193,5 @@ func (s *Stream[_]) Dispose() {
 		close(s.stopListen)
 		s.wasDisposed = true
 	}()
+	return nil
 }
