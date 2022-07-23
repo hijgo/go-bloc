@@ -260,7 +260,9 @@ func TestStream_DisposeWhileAlreadyListening(t *testing.T) {
 func TestStream_ListenShouldReturnErrorWhenAlreadyDisposed(t *testing.T) {
 	s := CreateStream(1, func(NewItem int) {})
 
-	s.Dispose()
+	if err := s.Dispose(); err != nil {
+		t.Errorf("Unexpected Error: '%s' while disposing Stream", err.Error())
+	}
 
 	err := s.Listen()
 	if err == nil {
@@ -285,7 +287,11 @@ func TestStream_ListenShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
 		t.Errorf("Expected Listen To Return Error With Message '%s' Actual '%s'", StartListenErr.Error(), err.Error())
 	}
 
-	defer s.Dispose()
+	defer func() {
+		if err := s.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing Stream", err.Error())
+		}
+	}()
 }
 
 func TestStream_ResumeAtHistoryPositionShouldReturnErrorWhenPositionNotInRange(t *testing.T) {
@@ -311,7 +317,11 @@ func TestStream_ResumeAtHistoryPositionShouldReturnErrorWhenPositionNotInRange(t
 		t.Errorf("Expected Listen To Return Error With Message '%s' Actual '%s'", wantedErr.Error(), err.Error())
 	}
 
-	defer s.Dispose()
+	defer func() {
+		if err := s.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing Stream", err.Error())
+		}
+	}()
 }
 
 func TestStream_StopListenShouldReturnErrorWhenAlreadyStopped(t *testing.T) {
