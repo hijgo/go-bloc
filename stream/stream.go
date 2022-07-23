@@ -186,9 +186,6 @@ func (s *Stream[T]) Add(NewItem T) {
 // Will close all channels used by the stream, in addition to that will also stop listening to stream.
 // After disposing the stream cannot be listened to ever again.
 func (s *Stream[_]) Dispose() error {
-	if s.GetListenStatus() {
-		return s.StopListen()
-	}
 
 	defer func() {
 		close(s.sink)
@@ -196,5 +193,10 @@ func (s *Stream[_]) Dispose() error {
 		close(s.stopListen)
 		s.wasDisposed = true
 	}()
+
+	if s.GetListenStatus() {
+		return s.StopListen()
+	}
+
 	return nil
 }

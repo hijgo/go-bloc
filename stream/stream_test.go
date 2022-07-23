@@ -221,7 +221,16 @@ func TestStream_Dispose(t *testing.T) {
 
 	s.Dispose()
 	if value := s.wasDisposed; !value {
-		t.Errorf("Expected wasDisposed To Equal '%t' Actual '%t'", false, value)
+		t.Errorf("Expected wasDisposed To Equal '%t' Actual '%t'", true, value)
+	}
+}
+
+func TestStream_DisposeWhileAlreadyListening(t *testing.T) {
+	s := CreateStream(1, func(NewItem int) {})
+	s.Listen()
+	s.Dispose()
+	if value := s.wasDisposed; !value {
+		t.Errorf("Expected wasDisposed To Equal '%t' Actual '%t'", true, value)
 	}
 }
 

@@ -75,16 +75,15 @@ func TestStreamBuilder_Init(t *testing.T) {
 }
 
 func TestStreamBuilder_InitOnError(t *testing.T) {
-	wg.Add(1)
+	wg.Add(3)
 	streamBuilder.Init(&initialEvent)
-	wg.Wait()
 
 	if err := streamBuilder.Init(&initialEvent); err == nil || err != &stream.StartListenErr {
-		t.Errorf("Expected StartListenToEventStream error of type '%s' actual was '%s'", reflect.TypeOf(stream.StopListenErr), reflect.TypeOf(err))
+		t.Errorf("Expected StartListenToEventStream error of type '%s' actual was '%s'", reflect.TypeOf(stream.StartListenErr), reflect.TypeOf(err))
 	}
 	streamBuilder.Dispose()
 	if err := streamBuilder.Init(&initialEvent); err == nil || err != &stream.AlreadyDisposedErr {
-		t.Errorf("Expected StartListenToEventStream error of type '%s' actual was '%s'", reflect.TypeOf(stream.StopListenErr), reflect.TypeOf(err))
+		t.Errorf("Expected StartListenToEventStream error of type '%s' actual was '%s'", reflect.TypeOf(stream.StartListenErr), reflect.TypeOf(err))
 	}
 	t.Cleanup(resetEnv)
 
@@ -93,7 +92,6 @@ func TestStreamBuilder_InitOnError(t *testing.T) {
 func TestStreamBuilder_Dispose(t *testing.T) {
 	wg.Add(1)
 	streamBuilder.Init(&initialEvent)
-	wg.Wait()
 	streamBuilder.Dispose()
 
 	expected := value
@@ -102,5 +100,4 @@ func TestStreamBuilder_Dispose(t *testing.T) {
 		t.Errorf("Expected check Of Value '%d' Actual '%d'", 1, value)
 	}
 	t.Cleanup(resetEnv)
-
 }

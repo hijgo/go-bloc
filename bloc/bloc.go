@@ -94,7 +94,13 @@ func (b *BloC[E, S, AD]) StopListenToEventStream() error {
 }
 
 // If the BloC is no longer needed call this function to clear it gracefully
-func (b *BloC[E, S, AD]) Dispose() {
-	b.stateStream.Dispose()
-	b.eventStream.Dispose()
+func (b *BloC[E, S, AD]) Dispose() error {
+	if err := b.stateStream.Dispose(); err != nil {
+		return err
+	}
+
+	if err := b.eventStream.Dispose(); err != nil {
+		return err
+	}
+	return nil
 }
