@@ -1,15 +1,19 @@
 package stream_builder
 
-// An interface to unify the interactions with all Stream-Builders
+// Interface to unify the interactions with all Stream-Builders.
+// Where a Stream-Builder should be a structure that does wrap a already
+// existing BloC-Structure, listens to it's state-stream and
+// further uses the stream.
 type StreamBuilder[E any, S any, BD any] interface {
-	// A function that sould shutdown the StreamBuilder gracefuly
+	// Shutdown the StreamBuilder and it's underlying
+	// BloC-Structure gracefully. After disposing the BloC
+	// cannot be used again.
 	//
-	// Will return an error when not successful
+	// Will return error when unsuccessful.
 	Dispose() error
-	// For initializing the structure.
+	// Set the starting Event of the bloc`s event-stream.
+	// Also will try to listen to the bloc`s state-/event-stream.
 	//
-	// After this function was called, the bloc should be able to receive and process incomming and build a state from it.
-	//
-	// Will return an error when not successful
+	// If not succesfull will return error.
 	Init(initialEvent *E) error
 }

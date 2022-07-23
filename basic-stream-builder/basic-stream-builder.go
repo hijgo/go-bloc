@@ -41,7 +41,7 @@ func CreateBasicStreamBuilder[E any, S any, BD any](BloC bloc.BloC[E, S, BD], Bu
 
 }
 
-func (sB *StreamBuilder[E, S, BD]) Init(initialEvent *E) error {
+func (sB StreamBuilder[E, S, BD]) Init(initialEvent *E) error {
 	if err := sB.BloC.StartListenToEventStream(); err != nil {
 		return err
 	}
@@ -54,6 +54,6 @@ func (sB *StreamBuilder[E, S, BD]) Init(initialEvent *E) error {
 }
 
 // If the StreamBuilder is no longer needed call this function to clear it gracefully
-func (sB *StreamBuilder[E, S, AD]) Dispose() {
-	sB.BloC.Dispose()
+func (sB StreamBuilder[E, S, AD]) Dispose() error {
+	return sB.BloC.Dispose()
 }

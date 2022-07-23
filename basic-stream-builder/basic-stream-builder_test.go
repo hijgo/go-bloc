@@ -8,6 +8,7 @@ import (
 	"github.com/hijgo/go-bloc/bloc"
 	"github.com/hijgo/go-bloc/event"
 	"github.com/hijgo/go-bloc/stream"
+	stream_builder "github.com/hijgo/go-bloc/stream-builder"
 )
 
 type Event struct {
@@ -48,6 +49,12 @@ var (
 		Data: 1,
 	}
 )
+
+func TestBasicStreamBuilder_ShouldImplementStreamBuilder(t *testing.T) {
+	if !reflect.TypeOf(streamBuilder).Implements(reflect.TypeOf((*stream_builder.StreamBuilder[Event, State, BD])(nil)).Elem()) {
+		t.Errorf("BasicStreamBuilder does not implement StreamBuilder Interface")
+	}
+}
 
 func TestStreamBuilder_Init(t *testing.T) {
 	wg.Add(1)

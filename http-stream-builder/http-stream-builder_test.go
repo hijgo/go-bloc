@@ -12,6 +12,7 @@ import (
 	"github.com/hijgo/go-bloc/bloc"
 	"github.com/hijgo/go-bloc/event"
 	"github.com/hijgo/go-bloc/stream"
+	stream_builder "github.com/hijgo/go-bloc/stream-builder"
 )
 
 type Event struct {
@@ -42,7 +43,7 @@ func resetEnv() {
 		return func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, NewState.State)
 		}
-	})
+	}, mux, defaultPath)
 	initialEvent = Event{
 		Data: 1,
 	}
@@ -66,16 +67,22 @@ var (
 		return func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, NewState.State)
 		}
-	})
+	}, mux, defaultPath)
 	initialEvent = Event{
 		Data: 1,
 	}
 )
 
+func TestHttpStreamBuilder_ShouldImplementStreamBuilder(t *testing.T) {
+	if !reflect.TypeOf(streamBuilder).Implements(reflect.TypeOf((*stream_builder.StreamBuilder[Event, State, BD])(nil)).Elem()) {
+		t.Errorf("HttpStreamBuilder does not implement StreamBuilder Interface")
+	}
+}
+
 func TestStreamBuilder_Init(t *testing.T) {
 	wg.Add(1)
-	streamBuilder.Init(defaultPath, nil, initialEvent)
-	testServer = httptest.NewServer(http.DefaultServeMux)
+	streamBuilder.Init(&initialEvent)
+	testServer = httptest.NewServer(mux)
 	wg.Wait()
 
 	if value := reflect.TypeOf(streamBuilder.BloC); value != reflect.TypeOf(testBloC) {
@@ -115,14 +122,16 @@ func TestStreamBuilder_Init(t *testing.T) {
 
 func TestStreamBuilder_InitOnError(t *testing.T) {
 	wg.Add(3)
-	streamBuilder.Init(defaultPath, mux, initialEvent)
+	streamBuilder.Init(&initialEvent)
 
-	if err := streamBuilder.Init(defaultPath+"1", mux, initialEvent); err == nil || err != &stream.StartListenErr {
+	streamBuilder.pattern = defaultPath + "1"
+	if err := streamBuilder.Init(&initialEvent); err == nil || err != &stream.StartListenErr {
 		t.Errorf("Expected StartListenToEventStream error of type '%s' actual was '%s'", reflect.TypeOf(stream.StartListenErr), reflect.TypeOf(err))
 	}
 	streamBuilder.Dispose()
 
-	if err := streamBuilder.Init(defaultPath+"2", mux, initialEvent); err == nil || err != &stream.AlreadyDisposedErr {
+	streamBuilder.pattern = defaultPath + "2"
+	if err := streamBuilder.Init(&initialEvent); err == nil || err != &stream.AlreadyDisposedErr {
 		t.Errorf("Expected StartListenToEventStream error of type '%s' actual was '%s'", reflect.TypeOf(stream.AlreadyDisposedErr), reflect.TypeOf(err))
 	}
 	t.Cleanup(resetEnv)
@@ -130,7 +139,7 @@ func TestStreamBuilder_InitOnError(t *testing.T) {
 
 func TestStreamBuilder_Dispose(t *testing.T) {
 	wg.Add(1)
-	streamBuilder.Init(defaultPath, mux, initialEvent)
+	streamBuilder.Init(&initialEvent)
 	streamBuilder.Dispose()
 
 	expected := value

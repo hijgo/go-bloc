@@ -24,6 +24,8 @@ func defaultHttpHandler(w http.ResponseWriter, r *http.Request) {
 // BloC : The BloC structure that should be wrapped
 type HttpStreamBuilder[E any, S any, BD any] struct {
 	BloC        bloc.BloC[E, S, BD]
+	Mux         *http.ServeMux
+	pattern     string
 	builderFunc func(S) func(http.ResponseWriter, *http.Request)
 	httpHandler func(http.ResponseWriter, *http.Request)
 }
@@ -43,15 +45,17 @@ type HttpStreamBuilder[E any, S any, BD any] struct {
 // BloC : The BloC structure that should be wrapped
 //
 // BuildFunc : The function that will handle any new produced state
-func CreateHttpStreamBuilder[E any, S any, BD any](BloC bloc.BloC[E, S, BD], BuildFunc func(S) func(http.ResponseWriter, *http.Request)) HttpStreamBuilder[E, S, BD] {
+func CreateHttpStreamBuilder[E any, S any, BD any](BloC bloc.BloC[E, S, BD], BuildFunc func(S) func(http.ResponseWriter, *http.Request), Mux *http.ServeMux, Pattern string) HttpStreamBuilder[E, S, BD] {
 	return HttpStreamBuilder[E, S, BD]{
 		BloC:        BloC,
 		builderFunc: BuildFunc,
 		httpHandler: defaultHttpHandler,
+		Mux:         Mux,
+		pattern:     Pattern,
 	}
 }
 
-func (sB *HttpStreamBuilder[E, S, BD]) Init(Pattern string, Mux *http.ServeMux, InitialEvent E) error {
+func (sB HttpStreamBuilder[E, S, BD]) Init(InitialEvent *E) error {
 
 	if err := sB.BloC.StartListenToEventStream(); err != nil {
 		return err
@@ -63,14 +67,14 @@ func (sB *HttpStreamBuilder[E, S, BD]) Init(Pattern string, Mux *http.ServeMux, 
 		return err
 	}
 
-	sB.BloC.AddEvent(InitialEvent)
+	sB.BloC.AddEvent(*InitialEvent)
 
-	if Mux != nil {
-		(*Mux).HandleFunc(Pattern, func(w http.ResponseWriter, r *http.Request) {
+	if sB.Mux != nil {
+		(*sB.Mux).HandleFunc(sB.pattern, func(w http.ResponseWriter, r *http.Request) {
 			sB.httpHandler(w, r)
 		})
 	} else {
-		http.DefaultServeMux.HandleFunc(Pattern, func(w http.ResponseWriter, r *http.Request) {
+		http.DefaultServeMux.HandleFunc(sB.pattern, func(w http.ResponseWriter, r *http.Request) {
 			sB.httpHandler(w, r)
 		})
 	}
@@ -79,6 +83,6 @@ func (sB *HttpStreamBuilder[E, S, BD]) Init(Pattern string, Mux *http.ServeMux, 
 }
 
 // If the StreamBuilder is no longer needed call this function to clear it gracefully
-func (sB *HttpStreamBuilder[E, S, AD]) Dispose() error {
+func (sB HttpStreamBuilder[E, S, AD]) Dispose() error {
 	return sB.BloC.Dispose()
 }
