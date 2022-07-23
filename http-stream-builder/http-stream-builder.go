@@ -50,8 +50,13 @@ func CreateHttpStreamBuilder[E any, S any, BD any](BloC bloc.BloC[E, S, BD], Bui
 		BloC:        BloC,
 		builderFunc: BuildFunc,
 		httpHandler: defaultHttpHandler,
-		Mux:         Mux,
-		pattern:     Pattern,
+		Mux: func() *http.ServeMux {
+			if Mux != nil {
+				return Mux
+			}
+			return http.DefaultServeMux
+		}(),
+		pattern: Pattern,
 	}
 }
 
@@ -69,15 +74,9 @@ func (sB HttpStreamBuilder[E, S, BD]) Init(InitialEvent *E) error {
 
 	sB.BloC.AddEvent(*InitialEvent)
 
-	if sB.Mux != nil {
-		(*sB.Mux).HandleFunc(sB.pattern, func(w http.ResponseWriter, r *http.Request) {
-			sB.httpHandler(w, r)
-		})
-	} else {
-		http.DefaultServeMux.HandleFunc(sB.pattern, func(w http.ResponseWriter, r *http.Request) {
-			sB.httpHandler(w, r)
-		})
-	}
+	(*sB.Mux).HandleFunc(sB.pattern, func(w http.ResponseWriter, r *http.Request) {
+		sB.httpHandler(w, r)
+	})
 
 	return nil
 }
