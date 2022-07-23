@@ -58,7 +58,9 @@ func TestBasicStreamBuilder_ShouldImplementStreamBuilder(t *testing.T) {
 
 func TestStreamBuilder_Init(t *testing.T) {
 	wg.Add(1)
-	streamBuilder.Init(&initialEvent)
+	if err := streamBuilder.Init(&initialEvent); err != nil {
+		t.Errorf("Unexpected Error: '%s' while initializing StreamBuilder", err.Error())
+	}
 
 	if value := reflect.TypeOf(streamBuilder.BloC); value != reflect.TypeOf(testBloC) {
 		t.Errorf("Expected BloC Of Type '%s' Actual '%s'", reflect.TypeOf(testBloC), value)
@@ -83,12 +85,17 @@ func TestStreamBuilder_Init(t *testing.T) {
 
 func TestStreamBuilder_InitOnError(t *testing.T) {
 	wg.Add(3)
-	streamBuilder.Init(&initialEvent)
+	if err := streamBuilder.Init(&initialEvent); err != nil {
+		t.Errorf("Unexpected Error: '%s' while initializing StreamBuilder", err.Error())
+	}
 
 	if err := streamBuilder.Init(&initialEvent); err == nil || err != &stream.StartListenErr {
 		t.Errorf("Expected StartListenToEventStream error of type '%s' actual was '%s'", reflect.TypeOf(stream.StartListenErr), reflect.TypeOf(err))
 	}
-	streamBuilder.Dispose()
+	if err := streamBuilder.Dispose(); err != nil {
+		t.Errorf("Unexpected Error: '%s' while disposing StreamBuilder", err.Error())
+	}
+
 	if err := streamBuilder.Init(&initialEvent); err == nil || err != &stream.AlreadyDisposedErr {
 		t.Errorf("Expected StartListenToEventStream error of type '%s' actual was '%s'", reflect.TypeOf(stream.StartListenErr), reflect.TypeOf(err))
 	}
@@ -98,8 +105,12 @@ func TestStreamBuilder_InitOnError(t *testing.T) {
 
 func TestStreamBuilder_Dispose(t *testing.T) {
 	wg.Add(1)
-	streamBuilder.Init(&initialEvent)
-	streamBuilder.Dispose()
+	if err := streamBuilder.Init(&initialEvent); err != nil {
+		t.Errorf("Unexpected Error: '%s' while initializing StreamBuilder", err.Error())
+	}
+	if err := streamBuilder.Dispose(); err != nil {
+		t.Errorf("Unexpected Error: '%s' while disposing StreamBuilder", err.Error())
+	}
 
 	expected := value
 	streamBuilder.BloC.AddEvent(Event{Data: 2})
