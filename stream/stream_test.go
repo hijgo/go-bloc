@@ -73,7 +73,11 @@ func TestStream_Add(t *testing.T) {
 		}
 	}
 
-	defer s.Dispose()
+	defer func() {
+		if err := s.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing Stream", err.Error())
+		}
+	}()
 }
 
 func TestStream_GetHistorySize(t *testing.T) {
@@ -110,7 +114,11 @@ func TestStream_Listen(t *testing.T) {
 		t.Errorf("Expected value To Equal '%d' Actual '%d'", 1, value)
 	}
 
-	defer s.Dispose()
+	defer func() {
+		if err := s.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing Stream", err.Error())
+		}
+	}()
 }
 
 func TestStream_StopListen(t *testing.T) {
@@ -197,8 +205,11 @@ func TestStream_ResumeAtHistoryPosition(t *testing.T) {
 			t.Errorf("Expected history To Equal '%d' At Position '%d' Actual '%d'", value, i, *v)
 		}
 	}
-	defer s.Dispose()
-
+	defer func() {
+		if err := s.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing Stream", err.Error())
+		}
+	}()
 }
 
 func TestStream_GetListenStatus(t *testing.T) {
@@ -219,7 +230,10 @@ func TestStream_GetListenStatus(t *testing.T) {
 func TestStream_Dispose(t *testing.T) {
 	s := CreateStream(1, func(NewItem int) {})
 
-	s.Dispose()
+	if err := s.Dispose(); err != nil {
+		t.Errorf("Unexpected Error: '%s' while disposing Stream", err.Error())
+	}
+
 	if value := s.wasDisposed; !value {
 		t.Errorf("Expected wasDisposed To Equal '%t' Actual '%t'", true, value)
 	}

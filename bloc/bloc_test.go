@@ -92,7 +92,11 @@ func TestBloC_StartListenToEventStreamShouldReturnErrorWhenAlreadyListenedTo(t *
 	} else if wantedErr := errors.New("stream already listened to"); err.Error() != wantedErr.Error() {
 		t.Errorf("Expected StartListenToEventStream To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
 	}
-	defer b.Dispose()
+	defer func() {
+		if err := b.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing BloC", err.Error())
+		}
+	}()
 }
 
 func TestBloC_StopListenToEventStream(t *testing.T) {
@@ -127,7 +131,11 @@ func TestBloC_StopListenToEventStream(t *testing.T) {
 	if value != 1 {
 		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 1, value)
 	}
-	defer b.Dispose()
+	defer func() {
+		if err := b.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing BloC", err.Error())
+		}
+	}()
 }
 
 func TestBloC_StopListenToEventStreamShouldReturnErrorWhenNotListenedTo(t *testing.T) {
@@ -140,8 +148,11 @@ func TestBloC_StopListenToEventStreamShouldReturnErrorWhenNotListenedTo(t *testi
 	} else if wantedErr := errors.New("stream isn't listened to"); err.Error() != wantedErr.Error() {
 		t.Errorf("Expected StopListenToEventStream To Return Error With Message '%s ' Actual '%s'", wantedErr.Error(), err.Error())
 	}
-	defer b.Dispose()
-
+	defer func() {
+		if err := b.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing BloC", err.Error())
+		}
+	}()
 }
 
 func TestBloC_ListenOnNewState(t *testing.T) {
@@ -176,7 +187,11 @@ func TestBloC_ListenOnNewState(t *testing.T) {
 	if value != 2 {
 		t.Errorf("Expected value To Be Of Value '%d' Actual '%d'", 2, value)
 	}
-	defer b.Dispose()
+	defer func() {
+		if err := b.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing BloC", err.Error())
+		}
+	}()
 }
 
 func TestBloC_ListenOnNewStateShouldReturnErrorWhenAlreadyListenedTo(t *testing.T) {
@@ -196,7 +211,11 @@ func TestBloC_ListenOnNewStateShouldReturnErrorWhenAlreadyListenedTo(t *testing.
 	} else if wantedErr := errors.New("stream already listened to"); err.Error() != wantedErr.Error() {
 		t.Errorf("Expected ListenOnNewState To Return Error With Message '%s' Actual '%s'", wantedErr.Error(), err.Error())
 	}
-	defer b.Dispose()
+	defer func() {
+		if err := b.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing BloC", err.Error())
+		}
+	}()
 }
 
 func TestBloC_StopListenToStateStream(t *testing.T) {
@@ -246,7 +265,11 @@ func TestBloC_StopListenToStateStream(t *testing.T) {
 	if value != 2 {
 		t.Errorf("Expected check To Be Of Value '%d' Actual '%d'", 2, value)
 	}
-	defer b.Dispose()
+	defer func() {
+		if err := b.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing BloC", err.Error())
+		}
+	}()
 }
 
 func TestBloC_StopListenToStateStreamShouldReturnErrorWhenNotListenedTo(t *testing.T) {
@@ -259,7 +282,11 @@ func TestBloC_StopListenToStateStreamShouldReturnErrorWhenNotListenedTo(t *testi
 	} else if wantedErr := errors.New("stream isn't listened to"); err.Error() != wantedErr.Error() {
 		t.Errorf("Expected StopListenToStateStream To Return Error With Message '%s' Actual '%s'", wantedErr.Error(), err.Error())
 	}
-	defer b.Dispose()
+	defer func() {
+		if err := b.Dispose(); err != nil {
+			t.Errorf("Unexpected Error: '%s' while disposing BloC", err.Error())
+		}
+	}()
 }
 
 func TestBloC_AddEvent(t *testing.T) {
