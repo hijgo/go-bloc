@@ -1,4 +1,4 @@
-package httpstreambuilder
+package streambuilder
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ func defaultHttpHandler(w http.ResponseWriter, r *http.Request) {
 // BD : BloCData Type of data that will be available to function that produces new state, can be used for example
 //
 // BloC : The BloC structure that should be wrapped
-type HttpStreamBuilder[E any, S any, BD any] struct {
+type AdvancedStreamBuilder[E any, S any, BD any] struct {
 	BloC        bloc.BloC[E, S, BD]
 	Mux         *http.ServeMux
 	pattern     string
@@ -30,9 +30,9 @@ type HttpStreamBuilder[E any, S any, BD any] struct {
 	httpHandler func(http.ResponseWriter, *http.Request)
 }
 
-// Function that should be called if a new HttpStreamBuilder is needed.
+// Function that should be called if a new AdvancedStreamBuilder is needed.
 //
-// Will create all necessary values so the HttpStreamBuilder can function properly and then return the new HttpStreamBuilder
+// Will create all necessary values so the AdvancedStreamBuilder can function properly and then return the new AdvancedStreamBuilder
 // of type E,S,BD or/and an error.
 //
 // E : Type of events being emitted into the BloC
@@ -45,8 +45,8 @@ type HttpStreamBuilder[E any, S any, BD any] struct {
 // BloC : The BloC structure that should be wrapped
 //
 // BuildFunc : The function that will handle any new produced state
-func CreateHttpStreamBuilder[E any, S any, BD any](BloC bloc.BloC[E, S, BD], BuildFunc func(S) func(http.ResponseWriter, *http.Request), Mux *http.ServeMux, Pattern string) HttpStreamBuilder[E, S, BD] {
-	return HttpStreamBuilder[E, S, BD]{
+func CreateAdvancedStreamBuilder[E any, S any, BD any](BloC bloc.BloC[E, S, BD], BuildFunc func(S) func(http.ResponseWriter, *http.Request), Mux *http.ServeMux, Pattern string) AdvancedStreamBuilder[E, S, BD] {
+	return AdvancedStreamBuilder[E, S, BD]{
 		BloC:        BloC,
 		builderFunc: BuildFunc,
 		httpHandler: defaultHttpHandler,
@@ -60,7 +60,7 @@ func CreateHttpStreamBuilder[E any, S any, BD any](BloC bloc.BloC[E, S, BD], Bui
 	}
 }
 
-func (sB HttpStreamBuilder[E, S, BD]) Init(InitialEvent *E) error {
+func (sB AdvancedStreamBuilder[E, S, BD]) Init(InitialEvent *E) error {
 
 	if err := sB.BloC.StartListenToEventStream(); err != nil {
 		return err
@@ -81,7 +81,7 @@ func (sB HttpStreamBuilder[E, S, BD]) Init(InitialEvent *E) error {
 	return nil
 }
 
-// If the StreamBuilder is no longer needed call this function to clear it gracefully
-func (sB HttpStreamBuilder[E, S, AD]) Dispose() error {
+// If the AdvancedStreamBuilder is no longer needed call this function to clear it gracefully
+func (sB AdvancedStreamBuilder[E, S, AD]) Dispose() error {
 	return sB.BloC.Dispose()
 }

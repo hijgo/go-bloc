@@ -1,4 +1,4 @@
-package stream_builder
+package streambuilder
 
 // Interface to unify the interactions with all Stream-Builders.
 // Where a Stream-Builder should be a structure that does wrap a already
