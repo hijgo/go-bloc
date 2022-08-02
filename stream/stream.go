@@ -7,6 +7,29 @@ import (
 	err "github.com/hijgo/go-bloc/error"
 )
 
+// Simple Stream API definition
+type StreamAPI[T any] interface {
+	// Should return true if listened to, else false
+	GetListenStatus() bool
+	// Stop listening to incomming items.
+	//
+	// After being called GetListenStatus should return false
+	// and no new items can be added to the stream
+	StopListen() error
+	// Start listening to incomming items.
+	//
+	// After being called GetListenStatus should return true
+	// and new items should be proccessed.
+	Listen() error
+	// If listening to the stream the passed down item should be processed
+	// else nothing should happen
+	Add(NewItem T)
+	// Should clear as much allocated memory as possible when called
+	//
+	// Disables the stream for further use
+	Dispose() error
+}
+
 var (
 	StopListenErr = err.Error{
 		Context: "Cannot call stop listening when stream isn't listened to!",
@@ -58,8 +81,8 @@ type Stream[T any] struct {
 // MaxHistorySize : The capacity of the history being saved
 //
 // OnNewItem : A Function that will be called everytime a new item is being passed to the stream
-func CreateStream[T any](MaxHistorySize int, OnNewItem func(NewItem T)) Stream[T] {
-	return Stream[T]{
+func CreateStream[T any](MaxHistorySize int, OnNewItem func(NewItem T)) *Stream[T] {
+	return &Stream[T]{
 		MaxHistorySize: MaxHistorySize,
 		OnNewItem:      OnNewItem,
 		sink:           make(chan T),
@@ -71,7 +94,7 @@ func CreateStream[T any](MaxHistorySize int, OnNewItem func(NewItem T)) Stream[T
 }
 
 // Returns true if the stream is currently listened to, if not returns false.
-func (s *Stream[_]) GetListenStatus() bool {
+func (s Stream[T]) GetListenStatus() bool {
 	return s.isListenedTo
 }
 
@@ -79,7 +102,7 @@ func (s *Stream[_]) GetListenStatus() bool {
 // by the OnNewItem function, but will be stored in the history.
 //
 // If the stream is not listened to, will return an error.
-func (s *Stream[_]) StopListen() error {
+func (s *Stream[T]) StopListen() error {
 
 	if !s.isListenedTo {
 		defer func() {}()
@@ -128,7 +151,7 @@ func (s *Stream[T]) Listen() error {
 }
 
 // Returning the current length of the history.
-func (s *Stream[_]) GetHistorySize() int {
+func (s Stream[_]) GetHistorySize() int {
 	return len(s.history)
 }
 
@@ -185,13 +208,14 @@ func (s *Stream[T]) Add(NewItem T) {
 
 // Will close all channels used by the stream, in addition to that will also stop listening to stream.
 // After disposing the stream cannot be listened to ever again.
-func (s *Stream[_]) Dispose() error {
+func (s *Stream[T]) Dispose() error {
 
 	defer func() {
 		close(s.sink)
 		close(s.pauseListen)
 		close(s.stopListen)
 		s.wasDisposed = true
+		s.history = nil
 	}()
 
 	if s.GetListenStatus() {

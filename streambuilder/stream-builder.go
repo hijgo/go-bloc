@@ -1,9 +1,17 @@
 package streambuilder
 
+import (
+	"net/http"
+)
+
+const (
+	defaultPath = "/"
+)
+
 // Interface to unify the interactions with all Stream-Builders.
-// Where a Stream-Builder should be a structure that does wrap a already
+// Where a Stream-Builder should be a structure that wraps a already
 // existing BloC-Structure, listens to it's state-stream and
-// further uses the stream.
+// further uses the output of stream.
 type StreamBuilder[E any, S any, BD any] interface {
 	// Shutdown the StreamBuilder and it's underlying
 	// BloC-Structure gracefully. After disposing the BloC
@@ -16,4 +24,8 @@ type StreamBuilder[E any, S any, BD any] interface {
 	//
 	// If not succesfull will return error.
 	Init(initialEvent *E) error
+}
+
+func defaultHttpHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "resources/NoState.html")
 }

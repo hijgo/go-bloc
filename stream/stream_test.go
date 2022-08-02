@@ -324,6 +324,14 @@ func TestStream_ResumeAtHistoryPositionShouldReturnErrorWhenPositionNotInRange(t
 	}()
 }
 
+func TestStream_ShouldImplementStreamApi(t *testing.T) {
+	s := CreateStream(1, func(NewItem int) {})
+
+	if !reflect.TypeOf(s).Implements(reflect.TypeOf((*StreamAPI[int])(nil)).Elem()) {
+		t.Errorf("Stream does not implement StreamAPI Interface")
+	}
+}
+
 func TestStream_StopListenShouldReturnErrorWhenAlreadyStopped(t *testing.T) {
 	s := CreateStream(1, func(NewItem int) {})
 

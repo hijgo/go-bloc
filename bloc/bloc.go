@@ -45,8 +45,8 @@ func CreateBloC[E any, S any, BD any](InitialBloCData BD, mapEventToState func(N
 	eventStream := stream.CreateStream(DefaultMaxHistorySize, func(NewEvent event.Event[E]) {
 		stateStream.Add(mapEventToState(NewEvent, &newBloC.BloCData))
 	})
-	newBloC.stateStream = &stateStream
-	newBloC.eventStream = &eventStream
+	newBloC.stateStream = stateStream
+	newBloC.eventStream = eventStream
 	return newBloC
 }
 
