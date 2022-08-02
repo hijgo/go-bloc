@@ -94,7 +94,7 @@ func CreateStream[T any](MaxHistorySize int, OnNewItem func(NewItem T)) *Stream[
 }
 
 // Returns true if the stream is currently listened to, if not returns false.
-func (s Stream[T]) GetListenStatus() bool {
+func (s *Stream[T]) GetListenStatus() bool {
 	return s.isListenedTo
 }
 
@@ -151,7 +151,7 @@ func (s *Stream[T]) Listen() error {
 }
 
 // Returning the current length of the history.
-func (s Stream[_]) GetHistorySize() int {
+func (s *Stream[_]) GetHistorySize() int {
 	return len(s.history)
 }
 
